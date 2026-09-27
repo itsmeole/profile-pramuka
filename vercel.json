@@ -1,4 +1,5 @@
 {
+  "cleanUrls": true,
   "rewrites": [
     { "source": "/riki", "destination": "/riki/index.html" },
     { "source": "/riki/", "destination": "/riki/index.html" }
