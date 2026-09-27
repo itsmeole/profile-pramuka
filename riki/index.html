@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal Pengelola – SAKO Ma'arif NU Jawa Barat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Supabase CDN Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Data Manager Layer -->
+  <script src="../assets/js/data-manager.js"></script>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+  <!-- ==========================================
+       LOGIN VIEW (Tampil jika belum login)
+       ========================================== -->
+  <div id="loginView" class="login-wrapper">
+    <div class="login-bg-decor"></div>
+    <div class="login-card">
+      <div class="login-header">
+        <img src="../assets/images/logo.png" alt="Logo SAKO" class="login-logo" onerror="this.style.display='none'" />
+        <h1 class="login-title">Portal Pengelola</h1>
+        <p class="login-subtitle">SAKO Ma'arif NU Jawa Barat</p>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="loginUsername">Nama Pengguna (Username)</label>
+          <div class="form-input-wrapper">
+            <input type="text" id="loginUsername" class="form-input" placeholder="Masukkan username" required autofocus autocomplete="username" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="loginPassword">Kata Sandi (Password)</label>
+          <div class="form-input-wrapper">
+            <input type="password" id="loginPassword" class="form-input" placeholder="Masukkan kata sandi" required autocomplete="current-password" />
+            <button type="button" class="form-input-icon" id="togglePasswordBtn" title="Lihat/Sembunyikan Sandi" aria-label="Lihat atau sembunyikan kata sandi">
+              <svg id="eyeIconOpen" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg id="eyeIconClosed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="loginAlert" style="display: none; padding: 12px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 18px; background: rgba(230, 57, 70, 0.15); border: 1px solid rgba(230, 57, 70, 0.4); color: #ff858d;"></div>
+
+        <button type="submit" class="login-btn">
+          <span>Masuk ke Panel Pengelola</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </form>
+
+      <div class="login-footer-info">
+        <a href="../index.html" class="login-back-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Kembali ke Website Utama
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       DASHBOARD VIEW (Tampil jika sudah login)
+       ========================================== -->
+  <div id="dashboardView" class="admin-layout" style="display: none;">
+    
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="sidebar-brand">
+        <img src="../assets/images/logo.png" alt="Logo" class="sidebar-logo" onerror="this.style.display='none'" />
+        <div class="sidebar-brand-text">
+          <h2>SAKO MA'ARIF NU</h2>
+          <span>Admin Portal</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <span class="nav-category">Navigasi Utama</span>
+        <button class="sidebar-link active" data-tab="tab-overview">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </span>
+          <span>Ringkasan</span>
+        </button>
+        <button class="sidebar-link" data-tab="tab-berita">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 1-2-2V7m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+          </span>
+          <span>Berita &amp; Kegiatan</span>
+        </button>
+        <button class="sidebar-link" data-tab="tab-tentang">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><line x1="8" y1="6" x2="8.01" y2="6"/><line x1="16" y1="6" x2="16.01" y2="6"/><line x1="12" y1="6" x2="12.01" y2="6"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/></svg>
+          </span>
+          <span>Tentang Kami</span>
+        </button>
+        <button class="sidebar-link" data-tab="tab-visimisi">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+          </span>
+          <span>Visi, Misi &amp; Tujuan</span>
+        </button>
+        <button class="sidebar-link" data-tab="tab-kepengurusan">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>
+          <span>Susunan Pengurus</span>
+        </button>
+
+        <span class="nav-category" style="margin-top: 14px;">Pengaturan Sistem</span>
+        <button class="sidebar-link" data-tab="tab-security">
+          <span class="icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          <span>Akun &amp; Keamanan</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="sidebarAvatar">A</div>
+          <div class="user-details">
+            <h4 id="sidebarUserName">Administrator SAKO</h4>
+            <span id="sidebarUserRole">Pengelola Utama</span>
+          </div>
+        </div>
+        <button type="button" class="sidebar-logout-btn" id="logoutBtn" title="Keluar dari Portal Admin">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Keluar</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN AREA -->
+    <main class="admin-main">
+      <!-- HEADER -->
+      <header class="admin-header">
+        <div class="header-title-area">
+          <button class="mobile-sidebar-toggle" id="sidebarToggleBtn" aria-label="Buka navigasi admin">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <h1 class="header-title" id="pageTitleText">Ringkasan Dashboard</h1>
+        </div>
+        <div class="header-actions">
+          <a href="../index.html" target="_blank" class="btn-view-site">
+            <span>Lihat Website</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+      </header>
+
+      <!-- CONTENT SECTIONS -->
+      <div class="admin-content">
+
+        <!-- 1. TAB: OVERVIEW -->
+        <section id="tab-overview" class="admin-section active">
+          <div class="section-header-box">
+            <div>
+              <h2>Selamat Datang di Panel Pengelola</h2>
+              <p>Kelola seluruh informasi dan publikasi website SAKO Ma'arif NU Jawa Barat secara terpadu.</p>
+            </div>
+            <button class="btn-primary" onclick="openNewsEditor()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Buat Berita Baru</span>
+            </button>
+          </div>
+
+          <div class="dashboard-grid">
+            <div class="stat-card">
+              <div class="stat-card-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 1-2-2V7m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+              </div>
+              <div class="stat-card-info">
+                <h3 id="statTotalBerita">2</h3>
+                <p>Total Artikel Berita</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div class="stat-card-info">
+                <h3 id="statTotalPengurus">60+</h3>
+                <p>Pengurus Terdata</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>
+              </div>
+              <div class="stat-card-info">
+                <h3 id="statTotalBidang">8</h3>
+                <p>Bidang Kerja Organisasi</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div class="stat-card-info">
+                <h3 style="font-size: 18px; color: var(--green-light);">Aktif</h3>
+                <p>Status Penyimpanan Data</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <h3 class="admin-card-title">Pintasan Cepat Pengelolaan</h3>
+            <div class="quick-actions-grid">
+              <button class="btn-outline quick-btn" onclick="openNewsEditor()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <span>Tulis Berita Baru</span>
+              </button>
+              <button class="btn-outline quick-btn" onclick="switchTab('tab-tentang')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>
+                <span>Edit Profil &amp; Statistik</span>
+              </button>
+              <button class="btn-outline quick-btn" onclick="switchTab('tab-visimisi')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                <span>Perbarui Visi &amp; Misi</span>
+              </button>
+              <button class="btn-outline quick-btn" onclick="switchTab('tab-kepengurusan')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <span>Ubah Struktur Pengurus</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. TAB: BERITA & KEGIATAN -->
+        <section id="tab-berita" class="admin-section">
+          <div class="section-header-box">
+            <div>
+              <h2>Manajemen Berita &amp; Informasi</h2>
+              <p>Tambahkan agenda kegiatan, dokumentasi perkemahan, atau siaran pers terbaru.</p>
+            </div>
+            <button class="btn-primary" id="openAddNewsModalBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Tambah Berita Baru</span>
+            </button>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-table-wrapper">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Gambar</th>
+                    <th>Judul Berita</th>
+                    <th>Kategori</th>
+                    <th>Tanggal</th>
+                    <th>Penulis</th>
+                    <th style="text-align: right;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="newsTableBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2B. TAB / SECTION: HALAMAN KHUSUS EDITOR BERITA -->
+        <section id="tab-berita-editor" class="admin-section">
+          <div class="section-header-box">
+            <div>
+              <div style="margin-bottom: 8px;">
+                <button type="button" class="btn-outline" onclick="closeNewsEditor()" style="padding: 6px 14px; font-size: 13px;">
+                  &larr; Kembali ke Daftar Berita
+                </button>
+              </div>
+              <h2 id="newsEditorHeading">Tulis Berita Baru</h2>
+              <p id="newsEditorSubheading">Isi formulir di bawah ini untuk menerbitkan atau memperbarui artikel berita resmi SAKO Ma'arif NU Jawa Barat.</p>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button type="button" class="btn-outline" onclick="closeNewsEditor()">Batal</button>
+              <button type="button" class="btn-primary" id="saveNewsSubmitBtn">Simpan Berita</button>
+            </div>
+          </div>
+
+          <form id="newsEditorForm">
+            <input type="hidden" id="editNewsId" />
+
+            <div class="admin-card">
+              <h3 class="admin-card-title">Informasi Utama Artikel</h3>
+
+              <div class="form-group">
+                <label class="form-label">Judul Berita <span style="color: var(--danger);">*</span></label>
+                <input type="text" id="newsTitleInput" class="form-input" placeholder="Contoh: Kemah Santri SAKO Ma'arif NU Jawa Barat 2026..." required />
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label">Kategori Berita</label>
+                  <select id="newsCategoryInput" class="form-select">
+                    <option value="Kemah">Kemah &amp; Lapangan</option>
+                    <option value="Pelatihan">Pelatihan / KMD</option>
+                    <option value="Organisasi">Organisasi &amp; Raker</option>
+                    <option value="Pengumuman">Pengumuman Resmi</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Nama Penulis / Redaksi</label>
+                  <input type="text" id="newsAuthorInput" class="form-input" value="SAKOMA" required />
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <h3 class="admin-card-title">Gambar Sampul &amp; Dokumentasi (Maks. 2 MB)</h3>
+
+              <div class="form-group">
+                <label class="form-label">Unggah Foto atau Masukkan Path / URL</label>
+                <div style="display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap;">
+                  <input type="text" id="newsImageInput" class="form-input" style="flex: 1; min-width: 240px;" placeholder="assets/images/kemah1.png atau URL web..." required />
+                  <label class="btn-outline" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span>Unggah Gambar</span>
+                    <input type="file" id="newsImageFileInput" accept="image/jpeg,image/png,image/webp,image/jpg" style="display: none;" />
+                  </label>
+                  <button type="button" class="btn-outline" id="resetImageBtn" style="color: var(--danger); border-color: rgba(230,57,70,0.3); display: none;">Hapus Foto</button>
+                </div>
+                <div style="margin-top: 8px; font-size: 12.5px; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                  <span>Format didukung: <strong>JPG, PNG, WEBP</strong>. Ukuran file dibatasi maksimal <strong>2 MB</strong>.</span>
+                  <span id="fileSizeIndicator" style="display: none; font-weight: 700; color: var(--green-light);"></span>
+                </div>
+              </div>
+
+              <!-- Preview Box -->
+              <div id="imagePreviewBox" style="margin-top: 14px; display: none;">
+                <label class="form-label" style="font-size: 12px; color: var(--text-dim); margin-bottom: 6px; display: block;">Pratinjau Gambar:</label>
+                <div style="max-width: 540px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--admin-border); background: #000;">
+                  <img id="imagePreviewEl" src="" alt="Pratinjau Foto" style="width: 100%; height: auto; max-height: 280px; object-fit: cover; display: block;" />
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <h3 class="admin-card-title">Konten Artikel Berita</h3>
+
+              <div class="form-group">
+                <label class="form-label">Ringkasan Singkat (Excerpt) <span style="color: var(--text-dim); font-weight: 400;">(Ringkasan 1-2 kalimat untuk kartu berita di beranda)</span></label>
+                <textarea id="newsExcerptInput" class="form-textarea" rows="3" placeholder="Tuliskan ringkasan singkat artikel..." required></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Isi Lengkap Berita <span style="color: var(--danger);">*</span></label>
+                <textarea id="newsContentInput" class="form-textarea" rows="12" placeholder="Tuliskan naskah berita lengkap di sini..." required style="min-height: 260px; font-size: 14.5px; line-height: 1.7;"></textarea>
+              </div>
+
+              <div class="form-group" style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: rgba(230, 180, 34, 0.08); border: 1px solid rgba(230, 180, 34, 0.25); border-radius: var(--radius-sm);">
+                <input type="checkbox" id="newsFeaturedInput" style="width: 20px; height: 20px; accent-color: var(--gold-primary); cursor: pointer; margin-top: 2px;" />
+                <label for="newsFeaturedInput" style="font-size: 14px; font-weight: 700; color: var(--text-main); cursor: pointer;">
+                  Sematkan sebagai Berita Utama (Featured Headline)
+                  <span style="display: block; font-size: 12.5px; font-weight: 400; color: var(--text-muted); margin-top: 3px;">
+                    Artikel ini akan disematkan di posisi teratas sebagai berita unggulan di beranda website.
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-bottom: 20px; flex-wrap: wrap;">
+              <button type="button" class="btn-outline" onclick="closeNewsEditor()">Batal</button>
+              <button type="button" class="btn-primary" id="saveNewsSubmitBtnBottom">Simpan Berita</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- 3. TAB: TENTANG KAMI -->
+        <section id="tab-tentang" class="admin-section">
+          <div class="section-header-box">
+            <div>
+              <h2>Edit Informasi Tentang Kami</h2>
+              <p>Perbarui profil pembuka, deskripsi organisasi, statistik hero, dan 4 pilar kepramukaan.</p>
+            </div>
+            <button class="btn-primary" id="saveTentangBtn">Simpan Perubahan</button>
+          </div>
+
+          <form id="tentangForm">
+            <div class="admin-card">
+              <h3 class="admin-card-title">Teks Utama Profil</h3>
+              <div class="form-group">
+                <label class="form-label">Sub-Judul / Label</label>
+                <input type="text" id="tentangIntroHeading" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Paragraf Utama (Lead Paragraph)</label>
+                <textarea id="tentangLeadParagraph" class="form-textarea" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Paragraf Penjelas 1</label>
+                <textarea id="tentangParagraph1" class="form-textarea" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Paragraf Penjelas 2</label>
+                <textarea id="tentangParagraph2" class="form-textarea" rows="3"></textarea>
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <h3 class="admin-card-title">Angka Statistik (Beranda &amp; Profil)</h3>
+              <div class="form-grid-3">
+                <div class="form-group">
+                  <label class="form-label">Tahun Aktif</label>
+                  <input type="text" id="tentangStatTahun" class="form-input" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Jumlah Bidang Kerja</label>
+                  <input type="text" id="tentangStatBidang" class="form-input" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Jumlah Pengurus</label>
+                  <input type="text" id="tentangStatPengurus" class="form-input" />
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <h3 class="admin-card-title" style="margin-bottom: 0;">Pilar Nilai Dasar Kepramukaan</h3>
+                <button type="button" class="btn-outline" id="addPillarBtn">+ Tambah Pilar Baru</button>
+              </div>
+              <div id="pillarsContainer">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <!-- 4. TAB: VISI, MISI & TUJUAN -->
+        <section id="tab-visimisi" class="admin-section">
+          <div class="section-header-box">
+            <div>
+              <h2>Edit Visi, Misi &amp; Tujuan</h2>
+              <p>Kelola rumusan visi organisasi serta butir-butir misi dan tujuan secara terstruktur.</p>
+            </div>
+            <button class="btn-primary" id="saveVisiMisiBtn">Simpan Visi Misi</button>
+          </div>
+
+          <form id="visimisiForm">
+            <div class="admin-card">
+              <h3 class="admin-card-title">Rumusan Visi</h3>
+              <div class="form-group">
+                <label class="form-label">Pernyataan Visi</label>
+                <textarea id="visiText" class="form-textarea" rows="3" placeholder="Masukkan visi organisasi..."></textarea>
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                <h3 class="admin-card-title" style="margin-bottom: 0;">Butir-Butir Misi</h3>
+                <button type="button" class="btn-outline" id="addMisiItemBtn">+ Tambah Butir Misi</button>
+              </div>
+              <div id="misiListContainer">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                <h3 class="admin-card-title" style="margin-bottom: 0;">Butir-Butir Tujuan</h3>
+                <button type="button" class="btn-outline" id="addTujuanItemBtn">+ Tambah Butir Tujuan</button>
+              </div>
+              <div id="tujuanListContainer">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <!-- 5. TAB: KEPENGURUSAN -->
+        <section id="tab-kepengurusan" class="admin-section">
+          <div class="section-header-box">
+            <div>
+              <h2>Edit Susunan Kepengurusan</h2>
+              <p>Kelola data nama dan jabatan Majelis Pembimbing (Mabisako), Pengurus Harian, serta 8 Bidang Kerja.</p>
+            </div>
+            <button class="btn-primary" id="saveKepengurusanBtn">Simpan Kepengurusan</button>
+          </div>
+
+          <form id="kepengurusanForm">
+            <!-- MABISAKO -->
+            <div class="admin-card">
+              <h3 class="admin-card-title">Majelis Pembimbing Sako (Mabisako)</h3>
+              <div class="form-group">
+                <label class="form-label">Ketua Mabisako</label>
+                <input type="text" id="mabiKetua" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Wakil Ketua Mabisako (Pisahkan tiap nama dengan koma atau baris baru)</label>
+                <textarea id="mabiWakil" class="form-textarea" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Sekretaris Mabisako</label>
+                <input type="text" id="mabiSekretaris" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Anggota Mabisako (Pisahkan tiap nama dengan baris baru)</label>
+                <textarea id="mabiAnggota" class="form-textarea" rows="4"></textarea>
+              </div>
+            </div>
+
+            <!-- PENGURUS HARIAN -->
+            <div class="admin-card">
+              <h3 class="admin-card-title">Pengurus Harian Sako</h3>
+              <div class="form-group">
+                <label class="form-label">Ketua Pimpinan Sako</label>
+                <input type="text" id="pimpinanKetua" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Wakil Ketua (Pisahkan tiap nama dengan baris baru)</label>
+                <textarea id="pimpinanWakil" class="form-textarea" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Sekretaris (Pisahkan tiap nama dengan baris baru)</label>
+                <textarea id="pimpinanSekretaris" class="form-textarea" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Bendahara (Pisahkan tiap nama dengan baris baru)</label>
+                <textarea id="pimpinanBendahara" class="form-textarea" rows="2"></textarea>
+              </div>
+            </div>
+
+            <!-- 8 BIDANG KERJA -->
+            <div class="admin-card">
+              <h3 class="admin-card-title">8 Bidang Kerja SAKO</h3>
+              <div id="bidangContainer">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <!-- TAB: KEAMANAN AKUN -->
+        <section id="tab-security" class="admin-section">
+          <div class="section-header-box">
+            <div>
+              <h2>Pengaturan Akun &amp; Kata Sandi</h2>
+              <p>Ganti kredensial akses untuk login admin di rute <code>/riki</code>.</p>
+            </div>
+          </div>
+
+          <div class="admin-card" style="max-width: 540px;">
+            <form id="securityForm">
+              <div class="form-group">
+                <label class="form-label">Nama Pengelola (Display Name)</label>
+                <input type="text" id="adminDisplayName" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Username Login Baru</label>
+                <input type="text" id="adminNewUsername" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Kata Sandi Baru</label>
+                <input type="password" id="adminNewPassword" class="form-input" placeholder="Masukkan sandi baru (min 6 karakter)" />
+              </div>
+              <button type="submit" class="btn-primary" style="margin-top: 10px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <span>Perbarui Kredensial Admin</span>
+              </button>
+            </form>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL KONFIRMASI LOGOUT -->
+  <div id="logoutModal" class="admin-modal-backdrop" style="display: none;">
+    <div class="admin-modal-box">
+      <div class="modal-icon-badge danger">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </div>
+      <h3>Konfirmasi Keluar</h3>
+      <p>Apakah Anda yakin ingin keluar dari Panel Pengelola SAKO Ma'arif NU Jawa Barat?</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-modal-cancel" id="cancelLogoutBtn">Batal</button>
+        <button type="button" class="btn-modal-confirm-danger" id="confirmLogoutBtn">Ya, Keluar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL KONFIRMASI HAPUS BERITA -->
+  <div id="deleteNewsModal" class="admin-modal-backdrop" style="display: none;">
+    <div class="admin-modal-box">
+      <div class="modal-icon-badge danger">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </div>
+      <h3>Konfirmasi Hapus Berita</h3>
+      <p id="deleteNewsConfirmMessage">Apakah Anda yakin ingin menghapus artikel berita ini secara permanen? Data yang telah dihapus tidak dapat dikembalikan.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-modal-cancel" id="cancelDeleteNewsBtn">Batal</button>
+        <button type="button" class="btn-modal-confirm-danger" id="confirmDeleteNewsBtn">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Admin Application Logic -->
+  <script src="admin.js"></script>
+</body>
+</html>
