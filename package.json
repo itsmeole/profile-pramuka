@@ -1,0 +1,24 @@
+{
+  "name": "profile-pramuka",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "node tests/test-admin-sync.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itsmeole/profile-pramuka.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/itsmeole/profile-pramuka/issues"
+  },
+  "homepage": "https://github.com/itsmeole/profile-pramuka#readme",
+  "devDependencies": {
+    "jsdom": "^29.1.1"
+  }
+}

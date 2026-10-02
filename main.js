@@ -230,26 +230,177 @@
   /* ============================================================
      DYNAMIC CONTENT RENDERING (SAKODB CONNECTOR)
      ============================================================ */
-  document.addEventListener('DOMContentLoaded', async () => {
+  function getInitials(name) {
+    if (!name) return 'S';
+    const clean = name.replace(/\b(Prof|Dr|Drs|Dra|KH|H|Hj|Ust|Ustadzah|Ir|M\.Si|M\.Ag|M\.Pd|S\.Pd|S\.H|S\.Kom|S\.E|S\.Ag|M\.M|S\.Pd\.I|M\.Pd\.I)\b\.?/gi, '').replace(/[,\.]/g, ' ').trim();
+    const parts = clean.split(/\s+/).filter(Boolean);
+    if (!parts.length) return 'S';
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  function getArticleUrl(item) {
+    if (!item) return 'berita.html';
+    if (item.slug && item.slug.endsWith('.html')) return item.slug;
+    if (item.id === 'kemah-santri-2026') return 'artikel-kemah-santri.html';
+    if (item.id === 'kmd-sako-2026') return 'artikel-kmd.html';
+    return `artikel-kmd.html?id=${encodeURIComponent(item.id)}`;
+  }
+
+  function renderPersonList(container, names) {
+    if (!container) return;
+    if (!names || !names.length) {
+      container.innerHTML = '<div class="kepeng-person-item"><span style="color:var(--text-muted);font-size:13px;padding:4px 0;">Belum ada data</span></div>';
+      return;
+    }
+    container.innerHTML = names.map(name => `
+      <div class="kepeng-person-item">
+        <div class="kepeng-avatar-sm">${getInitials(name)}</div>
+        <span>${name}</span>
+      </div>
+    `).join('');
+  }
+
+  async function hydrateCurrentPage() {
     if (!window.SakoDB) return;
 
     try {
-      // Helper for clean article routing
-      function getArticleUrl(item) {
-        if (!item) return 'berita.html';
-        if (item.slug && item.slug.endsWith('.html')) return item.slug;
-        if (item.id === 'kemah-santri-2026') return 'artikel-kemah-santri.html';
-        if (item.id === 'kmd-sako-2026') return 'artikel-kmd.html';
-        return `artikel-kmd.html?id=${encodeURIComponent(item.id)}`;
+      const path = (window.location.pathname || '').toLowerCase();
+      const isKepengurusan = !!document.querySelector('.kepengurusan-section') || path.includes('kepengurusan');
+      const isProfil = !!document.querySelector('.profil-section') || path.includes('profil');
+      const isIndex = !!document.getElementById('home') || !!document.querySelector('.hero') || path.endsWith('/') || path.endsWith('/index.html') || path.endsWith('/index') || path === '';
+      const isBerita = !!document.querySelector('.berita-section') || (path.includes('berita') && !path.includes('artikel'));
+      const isArticle = !!document.querySelector('.article-section') || path.includes('artikel');
+      const isGaleri = !!document.querySelector('.galeri-section') || !!document.querySelector('.gallery-preview-section');
+
+      // 1. KEPENGURUSAN PAGE
+      if (isKepengurusan) {
+        const kep = await window.SakoDB.getKepengurusan();
+        if (kep) {
+          // Mabisako
+          if (kep.mabisako) {
+            const mabiKetuaName = document.getElementById('mabiKetuaName') || document.querySelector('.kepeng-person-name');
+            const mabiKetuaRole = document.getElementById('mabiKetuaRole') || document.querySelector('.kepeng-person-role');
+            const mabiKetuaAvatar = document.getElementById('mabiKetuaAvatar') || document.querySelector('.kepeng-avatar');
+            if (mabiKetuaName && kep.mabisako.ketua?.name) mabiKetuaName.textContent = kep.mabisako.ketua.name;
+            if (mabiKetuaRole && kep.mabisako.ketua?.role) mabiKetuaRole.textContent = kep.mabisako.ketua.role;
+            if (mabiKetuaAvatar && kep.mabisako.ketua?.name) mabiKetuaAvatar.textContent = getInitials(kep.mabisako.ketua.name);
+
+            renderPersonList(document.getElementById('mabiWakilList'), kep.mabisako.wakilKetua);
+            renderPersonList(document.getElementById('mabiSekretarisList'), kep.mabisako.sekretaris);
+            renderPersonList(document.getElementById('mabiAnggotaList'), kep.mabisako.anggota);
+          }
+
+          // Pimpinan Harian
+          if (kep.pimpinan) {
+            const pimpinanKetuaName = document.getElementById('pimpinanKetuaName') || document.querySelectorAll('.kepeng-person-name')[1];
+            const pimpinanKetuaRole = document.getElementById('pimpinanKetuaRole') || document.querySelectorAll('.kepeng-person-role')[1];
+            const pimpinanKetuaAvatar = document.getElementById('pimpinanKetuaAvatar') || document.querySelectorAll('.kepeng-avatar')[1];
+            if (pimpinanKetuaName && kep.pimpinan.ketua?.name) pimpinanKetuaName.textContent = kep.pimpinan.ketua.name;
+            if (pimpinanKetuaRole && kep.pimpinan.ketua?.role) pimpinanKetuaRole.textContent = kep.pimpinan.ketua.role;
+            if (pimpinanKetuaAvatar && kep.pimpinan.ketua?.name) pimpinanKetuaAvatar.textContent = getInitials(kep.pimpinan.ketua.name);
+
+            renderPersonList(document.getElementById('pimpinanWakilList'), kep.pimpinan.wakilKetua);
+            renderPersonList(document.getElementById('pimpinanSekretarisList'), kep.pimpinan.sekretaris);
+            renderPersonList(document.getElementById('pimpinanBendaharaList'), kep.pimpinan.bendahara);
+          }
+
+          // Bidang-Bidang Pengurus
+          const bidangGrid = document.getElementById('bidangGrid') || document.querySelector('.bidang-grid');
+          if (bidangGrid && kep.bidang && kep.bidang.length) {
+            bidangGrid.innerHTML = kep.bidang.map((b, idx) => `
+              <div class="bidang-card">
+                <div class="bidang-card-title">
+                  <span class="bidang-num">${idx + 1}</span>
+                  ${b.name || 'Bidang Kerja ' + (idx + 1)}
+                </div>
+                <div class="bidang-members">
+                  ${b.ketua ? `<div class="bidang-member"><strong>${b.ketua}</strong> — Ketua Bidang</div>` : ''}
+                  ${(b.anggota || []).map(a => `<div class="bidang-member">${a}</div>`).join('')}
+                </div>
+              </div>
+            `).join('');
+          }
+        }
       }
 
-      // 1. DYNAMIC NEWS ON INDEX & BERITA PAGES
+      // 2. PROFIL PAGE (TENTANG, VISI, MISI, TUJUAN)
+      if (isProfil) {
+        const tentang = await window.SakoDB.getTentang();
+        const visimisi = await window.SakoDB.getVisiMisi();
+
+        if (tentang) {
+          const introContainer = document.getElementById('profil-intro-text') || document.querySelector('.profil-text-content');
+          if (introContainer) {
+            const heading = tentang.introHeading || 'Tentang Sako Maarif NU Jawa Barat';
+            const leadP = tentang.leadParagraph ? `<p>${tentang.leadParagraph}</p>` : '';
+            const otherPs = (tentang.paragraphs || []).filter(Boolean).map(p => `<p>${p}</p>`).join('');
+            introContainer.innerHTML = `<span class="profil-intro-heading">${heading}</span>${leadP}${otherPs}`;
+          }
+        }
+
+        if (visimisi) {
+          const visiQuote = document.querySelector('.profil-card-quote');
+          if (visiQuote && visimisi.visi) visiQuote.textContent = `"${visimisi.visi}"`;
+
+          const misiList = document.getElementById('misi-list') || document.querySelector('.misi-list');
+          if (misiList && visimisi.misi && visimisi.misi.length) {
+            misiList.innerHTML = visimisi.misi.map((m, idx) => `
+              <div class="misi-item"><span class="misi-num">${idx + 1}</span><span class="misi-text">${m}</span></div>
+            `).join('');
+          }
+
+          const tujuanList = document.getElementById('tujuan-list') || document.querySelector('.tujuan-list');
+          if (tujuanList && visimisi.tujuan && visimisi.tujuan.length) {
+            tujuanList.innerHTML = visimisi.tujuan.map((t, idx) => `
+              <div class="tujuan-item"><span class="tujuan-num">${idx + 1}</span><span class="tujuan-text">${t}</span></div>
+            `).join('');
+          }
+        }
+      }
+
+      // 3. INDEX / BERANDA (STATS, PILARS, NEWS PREVIEW)
+      if (isIndex) {
+        const tentangData = await window.SakoDB.getTentang();
+        if (tentangData) {
+          // Dynamic Hero Stats
+          if (tentangData.stats) {
+            const statTahun = document.getElementById('stat-tahun');
+            const statBidang = document.getElementById('stat-bidang');
+            const statPengurus = document.getElementById('stat-pengurus');
+            if (statTahun && tentangData.stats.tahun) statTahun.textContent = tentangData.stats.tahun;
+            if (statBidang && tentangData.stats.bidang) statBidang.textContent = tentangData.stats.bidang;
+            if (statPengurus && tentangData.stats.pengurus) statPengurus.textContent = tentangData.stats.pengurus;
+          }
+
+          // Pillars
+          const aboutGrid = document.querySelector('.about-grid');
+          if (aboutGrid && tentangData.pillars && tentangData.pillars.length) {
+            aboutGrid.innerHTML = '';
+            tentangData.pillars.forEach((p, idx) => {
+              const card = document.createElement('div');
+              card.className = `about-card reveal reveal-delay-${(idx % 4) + 1}`;
+              const iconSvg = p.icon && !/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}]/u.test(p.icon)
+                ? p.icon
+                : `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
+              card.innerHTML = `
+                <div class="about-icon">${iconSvg}</div>
+                <h3>${p.title}</h3>
+                <p>${p.desc}</p>
+              `;
+              aboutGrid.appendChild(card);
+            });
+            initScrollReveal();
+          }
+        }
+      }
+
+      // 4. BERITA & WARTA (INDEX & BERITA PAGES)
       const newsGrid = document.querySelector('.news-grid') || document.querySelector('.berita-grid');
       const beritaList = await window.SakoDB.getBerita();
 
       if (beritaList && beritaList.length && newsGrid) {
-        // If on index.html: render first 2-3 news cards
-        if (currentPage === 'index.html' || currentPage === '') {
+        if (isIndex) {
           newsGrid.innerHTML = '';
           beritaList.slice(0, 3).forEach((item, idx) => {
             const article = document.createElement('article');
@@ -275,32 +426,7 @@
             newsGrid.appendChild(article);
           });
           initScrollReveal();
-
-          // Dynamic Pillars & Stats on index.html
-          const tentangData = await window.SakoDB.getTentang();
-          if (tentangData) {
-            const aboutGrid = document.querySelector('.about-grid');
-            if (aboutGrid && tentangData.pillars && tentangData.pillars.length) {
-              aboutGrid.innerHTML = '';
-              tentangData.pillars.forEach((p, idx) => {
-                const card = document.createElement('div');
-                card.className = `about-card reveal reveal-delay-${(idx % 4) + 1}`;
-                const iconSvg = p.icon && !/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}]/u.test(p.icon)
-                  ? p.icon
-                  : `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`;
-                card.innerHTML = `
-                  <div class="about-icon">${iconSvg}</div>
-                  <h3>${p.title}</h3>
-                  <p>${p.desc}</p>
-                `;
-                aboutGrid.appendChild(card);
-              });
-              initScrollReveal();
-            }
-          }
-        } 
-        // If on berita.html: render featured and full list
-        else if (currentPage === 'berita.html') {
+        } else if (isBerita) {
           const featuredWrap = document.querySelector('.news-card.featured');
           const featuredItem = beritaList.find(b => b.featured) || beritaList[0];
 
@@ -321,7 +447,6 @@
             if (btn) btn.href = targetUrl;
           }
 
-          // Remaining cards in grid
           const otherNews = beritaList.filter(b => b.id !== featuredItem.id);
           if (otherNews.length) {
             newsGrid.innerHTML = '';
@@ -353,14 +478,14 @@
         }
       }
 
-      // 1B. ARTICLE DETAIL PAGE HYDRATION (For dynamic articles by ?id= or matching slug)
-      if (currentPage === 'artikel-kemah-santri.html' || currentPage === 'artikel-kmd.html') {
+      // 5. DETAIL ARTIKEL BERITA
+      if (isArticle) {
         const urlParams = new URLSearchParams(window.location.search);
         const reqId = urlParams.get('id');
-        const activeId = reqId || (currentPage === 'artikel-kemah-santri.html' ? 'kemah-santri-2026' : 'kmd-sako-2026');
+        const activeId = reqId || (path.includes('kemah') ? 'kemah-santri-2026' : 'kmd-sako-2026');
 
         const articleList = await window.SakoDB.getBerita();
-        const article = articleList?.find(b => b.id === activeId || b.slug === currentPage);
+        const article = articleList?.find(b => b.id === activeId || (b.slug && path.includes(b.slug)));
 
         if (article) {
           if (reqId) {
@@ -401,74 +526,12 @@
         }
       }
 
-      // 2. DYNAMIC PROFIL (VISI, MISI, TUJUAN, TENTANG)
-      if (currentPage === 'profil.html') {
-        const tentang = await window.SakoDB.getTentang();
-        const visimisi = await window.SakoDB.getVisiMisi();
-
-        if (tentang) {
-          const heading = document.querySelector('.profil-intro-heading');
-          if (heading && tentang.introHeading) heading.textContent = tentang.introHeading;
-
-          const pTags = document.querySelectorAll('.profil-text-content p');
-          if (pTags.length && tentang.leadParagraph) pTags[0].textContent = tentang.leadParagraph;
-          if (pTags.length > 1 && tentang.paragraphs?.[0]) pTags[1].textContent = tentang.paragraphs[0];
-          if (pTags.length > 2 && tentang.paragraphs?.[1]) pTags[2].textContent = tentang.paragraphs[1];
-        }
-
-        if (visimisi) {
-          const visiQuote = document.querySelector('.profil-card-quote');
-          if (visiQuote && visimisi.visi) visiQuote.textContent = `"${visimisi.visi}"`;
-
-          const misiList = document.querySelector('.misi-list');
-          if (misiList && visimisi.misi && visimisi.misi.length) {
-            misiList.innerHTML = '';
-            visimisi.misi.forEach((m, idx) => {
-              const div = document.createElement('div');
-              div.className = 'misi-item';
-              div.innerHTML = `<span class="misi-num">${idx + 1}</span><span class="misi-text">${m}</span>`;
-              misiList.appendChild(div);
-            });
-          }
-
-          const tujuanList = document.querySelector('.tujuan-list');
-          if (tujuanList && visimisi.tujuan && visimisi.tujuan.length) {
-            tujuanList.innerHTML = '';
-            visimisi.tujuan.forEach((t, idx) => {
-              const div = document.createElement('div');
-              div.className = 'tujuan-item';
-              div.innerHTML = `<span class="tujuan-num">${idx + 1}</span><span class="tujuan-text">${t}</span>`;
-              tujuanList.appendChild(div);
-            });
-          }
-        }
-      }
-
-      // 3. DYNAMIC KEPENGURUSAN
-      if (currentPage === 'kepengurusan.html') {
-        const kep = await window.SakoDB.getKepengurusan();
-        if (kep) {
-          // Mabisako Ketua
-          const mabiKetuaEl = document.querySelector('.kepeng-person-name');
-          if (mabiKetuaEl && kep.mabisako?.ketua?.name) {
-            mabiKetuaEl.textContent = kep.mabisako.ketua.name;
-          }
-          // Pimpinan Ketua
-          const pimpinanKetuaEl = document.querySelectorAll('.kepeng-person-name')[1];
-          if (pimpinanKetuaEl && kep.pimpinan?.ketua?.name) {
-            pimpinanKetuaEl.textContent = kep.pimpinan.ketua.name;
-          }
-        }
-      }
-
-      // 4. DYNAMIC GALLERY (OTOMATIS BERTAMBAH DARI BERITA BARU)
-      const galeriGrid = document.querySelector('.galeri-grid');
-      const galleryPreviewGrid = document.querySelector('.gallery-preview-grid');
-
-      if ((galeriGrid || galleryPreviewGrid) && window.SakoDB) {
+      // 6. DYNAMIC GALLERY (GALERI PAGE & PREVIEW)
+      if (isGaleri && window.SakoDB) {
+        const galeriGrid = document.querySelector('.galeri-grid');
+        const galleryPreviewGrid = document.querySelector('.gallery-preview-grid');
         const newsItems = await window.SakoDB.getBerita();
 
-        // Foto arsip awal pendukung galeri
         const basePhotos = [
           { image: 'assets/images/kemah1.png', title: 'Kemah Santri Pramuka Terpadu Jawa Barat', category: 'kemah' },
           { image: 'assets/images/kemah2.png', title: 'Kursus Mahir Dasar (KMD) Pembina Pramuka', category: 'pelatihan' },
@@ -480,7 +543,6 @@
           { image: 'assets/images/kemah4.png', title: 'Malam Api Unggun & Renungan Pandu NU', category: 'kemah' }
         ];
 
-        // Ambil semua foto dari berita yang terbit di database
         const newsPhotos = [];
         if (newsItems && newsItems.length) {
           newsItems.forEach(item => {
@@ -500,10 +562,8 @@
           });
         }
 
-        // Foto berita baru SELALU diletakkan paling atas/depan, diikuti foto arsip
         const fullGallery = [...newsPhotos, ...basePhotos];
 
-        // 1) Render pada halaman galeri.html
         if (galeriGrid) {
           galeriGrid.innerHTML = '';
           fullGallery.forEach((photo, idx) => {
@@ -535,7 +595,6 @@
           initScrollReveal();
         }
 
-        // 2) Render pada beranda index.html (Pratinjau Galeri)
         if (galleryPreviewGrid) {
           galleryPreviewGrid.innerHTML = '';
           const previewPhotos = fullGallery.slice(0, 3);
@@ -559,6 +618,16 @@
 
     } catch (err) {
       console.warn('Dynamic content hydration skipped:', err);
+    }
+  }
+
+  // Initial hydration on DOM ready
+  document.addEventListener('DOMContentLoaded', hydrateCurrentPage);
+
+  // Real-time synchronization when admin saves changes in another tab or same window
+  window.addEventListener('storage', (e) => {
+    if (e.key && e.key.startsWith('sako_')) {
+      hydrateCurrentPage();
     }
   });
 
