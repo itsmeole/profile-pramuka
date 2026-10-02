@@ -61,8 +61,20 @@
 
   <main id="main">
 
-  <!-- HERO -->
-  <section class="hero" id="home" aria-label="Beranda">
+  <!-- HERO (FULL-BLEED BANNER SLIDESHOW) -->
+  <section class="hero hero-banner-section" id="home" aria-label="Beranda">
+    <!-- FULL BACKGROUND BANNER SLIDESHOW -->
+    <div class="hero-banner-slideshow" id="heroBannerSlideshow" role="region" aria-label="Slideshow Banner Kegiatan SAKO">
+      <div class="hero-banner-slides" id="heroSlidesWrapper">
+        <div class="hero-banner-slide hero-slide active" data-index="0">
+          <img src="assets/images/kemah1.png" alt="Kemah Santri Pramuka Terpadu" class="hero-banner-img" onerror="this.src='assets/images/Banner.png'" />
+        </div>
+      </div>
+      <!-- Gradasi warna background agar teks banner tetap terlihat jelas & terbaca kontras -->
+      <div class="hero-banner-gradient-overlay" aria-hidden="true"></div>
+    </div>
+
+    <!-- HERO CONTENT (TEXT & ACTIONS) -->
     <div class="hero-content">
       <span class="hero-eyebrow">Satuan Komunitas Pramuka Pandu Ma'arif NU</span>
       <h1 class="hero-title">
@@ -94,13 +106,45 @@
       </div>
     </div>
 
-    <div class="hero-visual" aria-hidden="true">
+    <!-- HERO VISUAL (PRESTIGIOUS EMBLEM) -->
+    <div class="hero-visual" id="heroVisual">
       <div class="hero-emblem-container">
         <img src="assets/images/logo.png" alt="Lambang Pandu Ma'arif NU" class="hero-emblem"
           onerror="this.style.opacity='0.3'" />
         <div class="hero-emblem-ring r1"></div>
         <div class="hero-emblem-ring r2"></div>
         <div class="hero-emblem-ring r3"></div>
+      </div>
+    </div>
+
+    <!-- BANNER SLIDESHOW FOOTER CONTROLS & ACTIVE WARTA BADGE -->
+    <div class="hero-banner-controls-bar">
+      <!-- Active slide title link -->
+      <div class="hero-banner-caption" id="heroBannerCaption">
+        <span class="hero-banner-tag" id="heroBannerTag">Dokumentasi</span>
+        <h3 class="hero-banner-headline" id="heroBannerHeadline">
+          <a href="artikel-kemah-santri.html" id="heroBannerLink">Kemah Santri Pramuka Terpadu Sako Maarif NU Jawa Barat 2026</a>
+        </h3>
+      </div>
+
+      <!-- Controls: Prev, Next, Dots, Play/Pause -->
+      <div class="hero-banner-nav" id="heroSlideshow">
+        <button type="button" class="hero-banner-btn" id="heroSlidePrev" aria-label="Slide sebelumnya">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        
+        <div class="hero-banner-dots" id="heroSlideDots" role="tablist" aria-label="Pilih slide">
+          <button type="button" class="hero-banner-dot hero-slide-dot active" role="tab" aria-selected="true" aria-label="Slide 1"></button>
+        </div>
+
+        <button type="button" class="hero-banner-btn" id="heroSlideNext" aria-label="Slide berikutnya">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+
+        <button type="button" class="hero-banner-btn pause-toggle" id="heroSlideToggle" aria-label="Jeda slideshow">
+          <svg class="icon-pause" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          <svg class="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display:none;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
       </div>
     </div>
 

@@ -261,6 +261,248 @@
     `).join('');
   }
 
+  /* --- HERO SLIDESHOW CONTROLLER --- */
+  let heroSlideshowTimer = null;
+  let heroSlideshowPaused = false;
+  let heroCurrentSlide = 0;
+
+  async function initHeroSlideshow() {
+    const container = document.getElementById('heroSlideshow') || document.getElementById('heroBannerSlideshow');
+    const wrapper = document.getElementById('heroSlidesWrapper');
+    const dotsContainer = document.getElementById('heroSlideDots');
+    const prevBtn = document.getElementById('heroSlidePrev');
+    const nextBtn = document.getElementById('heroSlideNext');
+    const toggleBtn = document.getElementById('heroSlideToggle');
+    const bannerTag = document.getElementById('heroBannerTag');
+    const bannerLink = document.getElementById('heroBannerLink');
+    const bannerBox = document.getElementById('heroBannerSlideshow');
+    const controlsBar = document.querySelector('.hero-banner-controls-bar');
+
+    if (!wrapper) return;
+
+    if (heroSlideshowTimer) {
+      clearInterval(heroSlideshowTimer);
+      heroSlideshowTimer = null;
+    }
+
+    const newsList = (await window.SakoDB.getBerita()) || [];
+    const slideshowCfg = (await window.SakoDB.getHeroSlideshow()) || { enabled: true, interval: 5000, selectedNewsIds: [] };
+
+    if (!slideshowCfg.enabled) {
+      if (container) container.style.display = 'none';
+      if (bannerBox) bannerBox.style.display = 'none';
+      if (controlsBar) controlsBar.style.display = 'none';
+      return;
+    } else {
+      if (container) container.style.display = '';
+      if (bannerBox) bannerBox.style.display = '';
+      if (controlsBar) controlsBar.style.display = '';
+    }
+
+    // Filter news items with images
+    let selectedItems = [];
+    const newsWithImages = newsList.filter(item => item.image && String(item.image).trim() !== '');
+
+    if (slideshowCfg.selectedNewsIds && slideshowCfg.selectedNewsIds.length > 0) {
+      selectedItems = newsWithImages.filter(item => slideshowCfg.selectedNewsIds.includes(String(item.id)));
+    }
+
+    if (!selectedItems.length) {
+      selectedItems = newsWithImages.slice(0, 5);
+    }
+
+    // Fallback if still empty
+    if (!selectedItems.length) {
+      selectedItems = [
+        {
+          id: 'kemah-santri-2026',
+          title: 'Kemah Santri Pramuka Terpadu Sako Maarif NU Jawa Barat 2026',
+          category: 'Kemah Santri',
+          image: 'assets/images/kemah1.png',
+          slug: 'artikel-kemah-santri.html'
+        },
+        {
+          id: 'kmd-sako-2026',
+          title: 'KMD SAKO – Kursus Mahir Dasar Pramuka 2026',
+          category: 'Pelatihan',
+          image: 'assets/images/kemah2.png',
+          slug: 'artikel-kmd.html'
+        }
+      ];
+    }
+
+    // Populate banner slides
+    wrapper.innerHTML = '';
+    if (dotsContainer) dotsContainer.innerHTML = '';
+
+    selectedItems.forEach((item, idx) => {
+      const slide = document.createElement('div');
+      slide.className = `hero-banner-slide hero-slide ${idx === 0 ? 'active' : ''}`;
+      slide.setAttribute('data-index', idx);
+      slide.setAttribute('role', 'tabpanel');
+      slide.setAttribute('aria-roledescription', 'slide');
+      slide.setAttribute('aria-label', `${idx + 1} dari ${selectedItems.length}`);
+
+      const targetUrl = getArticleUrl(item);
+      const imgSrc = item.image ? (item.image.startsWith('http') || item.image.startsWith('data:') ? item.image : item.image) : 'assets/images/kemah1.png';
+
+      slide.innerHTML = `
+        <img src="${imgSrc}" alt="${item.title}" class="hero-banner-img hero-slide-img" onerror="this.src='assets/images/Banner.png'" />
+        <div class="hero-slide-caption sr-only" style="display:none;">
+          <span class="hero-slide-badge">${item.category || 'Dokumentasi SAKO'}</span>
+          <h3 class="hero-slide-headline"><a href="${targetUrl}">${item.title}</a></h3>
+        </div>
+      `;
+      wrapper.appendChild(slide);
+
+      if (dotsContainer) {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = `hero-banner-dot hero-slide-dot ${idx === 0 ? 'active' : ''}`;
+        dot.setAttribute('role', 'tab');
+        dot.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
+        dot.setAttribute('aria-label', `Slide ${idx + 1}: ${item.title}`);
+        dot.addEventListener('click', (e) => {
+          e.preventDefault();
+          goToSlide(idx);
+          restartTimer();
+        });
+        dotsContainer.appendChild(dot);
+      }
+    });
+
+    const slides = wrapper.querySelectorAll('.hero-slide');
+    const dots = dotsContainer ? dotsContainer.querySelectorAll('.hero-slide-dot') : [];
+    heroCurrentSlide = 0;
+
+    function goToSlide(n) {
+      if (!slides.length) return;
+      heroCurrentSlide = (n + slides.length) % slides.length;
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === heroCurrentSlide);
+      });
+      dots.forEach((d, i) => {
+        d.classList.toggle('active', i === heroCurrentSlide);
+        d.setAttribute('aria-selected', i === heroCurrentSlide ? 'true' : 'false');
+      });
+
+      const currentItem = selectedItems[heroCurrentSlide];
+      if (currentItem) {
+        if (bannerTag) bannerTag.textContent = currentItem.category || 'Dokumentasi';
+        if (bannerLink) {
+          bannerLink.textContent = currentItem.title;
+          bannerLink.href = getArticleUrl(currentItem);
+        }
+      }
+    }
+
+    // Set initial caption
+    goToSlide(0);
+
+    function nextSlide() {
+      goToSlide(heroCurrentSlide + 1);
+    }
+
+    function prevSlide() {
+      goToSlide(heroCurrentSlide - 1);
+    }
+
+    const intervalTime = Math.max(2500, Number(slideshowCfg.interval) || 5000);
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function startTimer() {
+      if (slides.length <= 1 || prefersReducedMotion || heroSlideshowPaused) return;
+      if (heroSlideshowTimer) clearInterval(heroSlideshowTimer);
+      heroSlideshowTimer = setInterval(nextSlide, intervalTime);
+    }
+
+    function restartTimer() {
+      if (heroSlideshowTimer) clearInterval(heroSlideshowTimer);
+      startTimer();
+    }
+
+    if (prevBtn) {
+      prevBtn.onclick = (e) => {
+        e.preventDefault();
+        prevSlide();
+        restartTimer();
+      };
+    }
+
+    if (nextBtn) {
+      nextBtn.onclick = (e) => {
+        e.preventDefault();
+        nextSlide();
+        restartTimer();
+      };
+    }
+
+    if (toggleBtn) {
+      toggleBtn.onclick = (e) => {
+        e.preventDefault();
+        heroSlideshowPaused = !heroSlideshowPaused;
+        const iconPause = toggleBtn.querySelector('.icon-pause');
+        const iconPlay = toggleBtn.querySelector('.icon-play');
+        if (heroSlideshowPaused) {
+          if (heroSlideshowTimer) clearInterval(heroSlideshowTimer);
+          if (iconPause) iconPause.style.display = 'none';
+          if (iconPlay) iconPlay.style.display = 'block';
+          toggleBtn.setAttribute('aria-label', 'Lanjutkan slideshow');
+        } else {
+          startTimer();
+          if (iconPause) iconPause.style.display = 'block';
+          if (iconPlay) iconPlay.style.display = 'none';
+          toggleBtn.setAttribute('aria-label', 'Jeda slideshow');
+        }
+      };
+    }
+
+    const heroSection = document.querySelector('.hero-banner-section') || container;
+    if (heroSection) {
+      heroSection.onmouseenter = () => {
+        if (!heroSlideshowPaused && heroSlideshowTimer) {
+          clearInterval(heroSlideshowTimer);
+        }
+      };
+
+      heroSection.onmouseleave = () => {
+        if (!heroSlideshowPaused && !prefersReducedMotion) {
+          startTimer();
+        }
+      };
+
+      heroSection.onkeydown = (e) => {
+        if (e.key === 'ArrowLeft') {
+          prevSlide();
+          restartTimer();
+        } else if (e.key === 'ArrowRight') {
+          nextSlide();
+          restartTimer();
+        }
+      };
+
+      let touchStartX = 0;
+      heroSection.ontouchstart = (e) => {
+        if (e.changedTouches && e.changedTouches[0]) {
+          touchStartX = e.changedTouches[0].screenX;
+        }
+      };
+      heroSection.ontouchend = (e) => {
+        if (e.changedTouches && e.changedTouches[0]) {
+          const touchEndX = e.changedTouches[0].screenX;
+          const diff = touchEndX - touchStartX;
+          if (Math.abs(diff) > 40) {
+            if (diff < 0) nextSlide();
+            else prevSlide();
+            restartTimer();
+          }
+        }
+      };
+    }
+
+    startTimer();
+  }
+
   async function hydrateCurrentPage() {
     if (!window.SakoDB) return;
 
@@ -393,6 +635,9 @@
             initScrollReveal();
           }
         }
+
+        // Initialize Dynamic Hero Slideshow
+        await initHeroSlideshow();
       }
 
       // 4. BERITA & WARTA (INDEX & BERITA PAGES)

@@ -130,7 +130,13 @@
         excerpt: "Kursus Mahir Dasar (KMD) Pramuka Sako Pandu Maarif NU Jawa Barat. Tingkatkan Kompetensi, Bangun Karakter, Siapkan Pembina Hebat!",
         content: `Kursus Mahir Dasar (KMD) Pramuka Sako Pandu Maarif NU Jawa Barat merupakan program pelatihan resmi berstandar kepramukaan nasional yang diselenggarakan untuk mencetak pembina-pembina pramuka yang kompeten, berakhlak mulia, dan berakar pada nilai-nilai ke-NU-an.`
       }
-    ]
+    ],
+    heroSlideshow: {
+      enabled: true,
+      interval: 5000,
+      effect: 'fade',
+      selectedNewsIds: ['kemah-santri-2026', 'kmd-sako-2026']
+    }
   };
 
   // Local Storage Keys
@@ -139,6 +145,7 @@
     VISIMISI: 'sako_data_visimisi',
     KEPENGURUSAN: 'sako_data_kepengurusan',
     BERITA: 'sako_data_berita',
+    HERO_SLIDESHOW: 'sako_hero_slideshow',
     CONFIG: 'sako_supabase_config',
     ADMIN_CREDS: 'sako_admin_creds',
     AUTH_SESSION: 'sako_admin_session'
@@ -171,6 +178,9 @@
       }
       if (!localStorage.getItem(STORAGE_KEYS.BERITA)) {
         localStorage.setItem(STORAGE_KEYS.BERITA, JSON.stringify(DEFAULT_DATA.berita));
+      }
+      if (!localStorage.getItem(STORAGE_KEYS.HERO_SLIDESHOW)) {
+        localStorage.setItem(STORAGE_KEYS.HERO_SLIDESHOW, JSON.stringify(DEFAULT_DATA.heroSlideshow));
       }
       if (!localStorage.getItem(STORAGE_KEYS.ADMIN_CREDS)) {
         localStorage.setItem(STORAGE_KEYS.ADMIN_CREDS, JSON.stringify(DEFAULT_CREDS));
@@ -465,6 +475,47 @@
           }
         } catch (e) {
           console.warn('Failed to delete news from cloud:', e);
+        }
+      }
+      return true;
+    }
+
+    // --- HERO SLIDESHOW ---
+    async getHeroSlideshow() {
+      if (this.supabaseClient) {
+        try {
+          const { data, error } = await this.supabaseClient
+            .from('sako_settings')
+            .select('content')
+            .eq('key', 'hero_slideshow')
+            .single();
+          if (data && data.content) {
+            localStorage.setItem(STORAGE_KEYS.HERO_SLIDESHOW, JSON.stringify(data.content));
+            return data.content;
+          }
+        } catch (e) {
+          console.warn('Fallback to local storage for hero_slideshow:', e);
+        }
+      }
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.HERO_SLIDESHOW);
+        return raw ? JSON.parse(raw) : DEFAULT_DATA.heroSlideshow;
+      } catch (e) {
+        return DEFAULT_DATA.heroSlideshow;
+      }
+    }
+
+    async saveHeroSlideshow(data) {
+      localStorage.setItem(STORAGE_KEYS.HERO_SLIDESHOW, JSON.stringify(data));
+      if (this.supabaseClient) {
+        try {
+          await this.supabaseClient.from('sako_settings').upsert({
+            key: 'hero_slideshow',
+            content: data,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'key' });
+        } catch (e) {
+          console.error('Failed to sync hero_slideshow to cloud:', e);
         }
       }
       return true;

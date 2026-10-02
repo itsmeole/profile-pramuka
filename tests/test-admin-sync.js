@@ -374,6 +374,57 @@ async function runTests() {
     `Expected: "Ketua Pimpinan Harian Periode Baru", Got: "${updatedRoleInDOM}"`);
 
   // --------------------------------------------------------------------------
+  // TEST SUITE 6: HERO SLIDESHOW SELECTION & DYNAMIC SYNC (index.html)
+  // --------------------------------------------------------------------------
+  console.log('\n--- TEST SUITE 6: HERO SLIDESHOW SELECTION (index.html) ---');
+
+  // Test 1: Admin selects only the second article for hero slideshow
+  const customSlideshowCfg = {
+    enabled: true,
+    interval: 5000,
+    selectedNewsIds: ['pelatihan-jurnalistik-pramuka']
+  };
+
+  const slideshowEnv = createDOMForPage('index.html', {
+    sako_data_berita: testBeritaList,
+    sako_hero_slideshow: customSlideshowCfg
+  });
+
+  slideshowEnv.window.eval(mainJsCode);
+  await new Promise(r => setTimeout(r, 200));
+
+  const docSlideshow = slideshowEnv.document;
+  const slideTitles = Array.from(docSlideshow.querySelectorAll('.hero-slide-headline a')).map(a => a.textContent.trim());
+  const slideDotsCount = docSlideshow.querySelectorAll('.hero-slide-dot').length;
+
+  assert(slideTitles.length === 1 && slideTitles[0] === 'Pelatihan Jurnalistik & Cyber Sako Maarif NU',
+    'Hero Slideshow: Hanya foto berita yang dipilih admin yang tampil di slideshow',
+    `Expected: ["Pelatihan Jurnalistik & Cyber Sako Maarif NU"], Got: ${JSON.stringify(slideTitles)}`);
+
+  assert(slideDotsCount === 1,
+    'Hero Slideshow: Jumlah dot indikator sesuai dengan jumlah foto yang dipilih admin',
+    `Expected: 1, Got: ${slideDotsCount}`);
+
+  // Test 2: Admin updates selection in real-time to include both articles
+  const updatedSlideshowCfg = {
+    enabled: true,
+    interval: 3000,
+    selectedNewsIds: ['rapat-kerja-daerah-2026', 'pelatihan-jurnalistik-pramuka']
+  };
+
+  slideshowEnv.window.localStorage.setItem('sako_hero_slideshow', JSON.stringify(updatedSlideshowCfg));
+  const slideStorageEvent = new slideshowEnv.window.Event('storage');
+  slideStorageEvent.key = 'sako_hero_slideshow';
+  slideshowEnv.window.dispatchEvent(slideStorageEvent);
+
+  await new Promise(r => setTimeout(r, 250));
+
+  const updatedSlideTitles = Array.from(docSlideshow.querySelectorAll('.hero-slide-headline a')).map(a => a.textContent.trim());
+  assert(updatedSlideTitles.length === 2 && updatedSlideTitles.includes('Rakerda Sako Ma\'arif NU Jabar Sukses Digelar di Bandung'),
+    'Hero Slideshow Realtime: Perubahan pilihan gambar di admin langsung ter-update di slideshow Hero tanpa reload',
+    `Expected length 2, Got: ${JSON.stringify(updatedSlideTitles)}`);
+
+  // --------------------------------------------------------------------------
   // SUMMARY
   // --------------------------------------------------------------------------
   console.log('\n================================================================');

@@ -180,6 +180,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'tab-overview': 'Ringkasan Dashboard',
     'tab-berita': 'Manajemen Berita & Kegiatan',
     'tab-berita-editor': 'Tulis Berita Baru',
+    'tab-slideshow': 'Pengaturan Slideshow Hero',
     'tab-tentang': 'Informasi Tentang Kami',
     'tab-visimisi': 'Visi, Misi & Tujuan',
     'tab-kepengurusan': 'Susunan Kepengurusan',
@@ -202,6 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load data for specific tab
     if (tabId === 'tab-overview') loadOverviewStats();
     if (tabId === 'tab-berita') loadBeritaTab();
+    if (tabId === 'tab-slideshow') loadSlideshowTab();
     if (tabId === 'tab-tentang') loadTentangTab();
     if (tabId === 'tab-visimisi') loadVisiMisiTab();
     if (tabId === 'tab-kepengurusan') loadKepengurusanTab();
@@ -315,6 +317,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('newsExcerptInput').value = '';
       document.getElementById('newsContentInput').value = '';
       document.getElementById('newsFeaturedInput').checked = false;
+      const heroCheck = document.getElementById('newsHeroSlideshowInput');
+      if (heroCheck) heroCheck.checked = true;
       imagePreviewBox.style.display = 'block';
       imagePreviewEl.src = '../assets/images/kemah1.png';
     }
@@ -404,6 +408,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('newsExcerptInput').value = item.excerpt || '';
     document.getElementById('newsContentInput').value = item.content || '';
     document.getElementById('newsFeaturedInput').checked = !!item.featured;
+
+    const heroCfg = (await window.SakoDB.getHeroSlideshow()) || { selectedNewsIds: [] };
+    const inHero = heroCfg.selectedNewsIds && heroCfg.selectedNewsIds.includes(String(id));
+    const heroCheck = document.getElementById('newsHeroSlideshowInput');
+    if (heroCheck) heroCheck.checked = !!inHero;
 
     const imgVal = item.image || 'assets/images/kemah1.png';
     imagePreviewEl.src = imgVal.startsWith('http') || imgVal.startsWith('data:') ? imgVal : (imgVal.startsWith('../') ? imgVal : `../${imgVal}`);
@@ -496,6 +505,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     await window.SakoDB.saveBeritaItem(item);
+
+    // Sync hero slideshow selection for this article
+    const inHeroSlideshow = document.getElementById('newsHeroSlideshowInput')?.checked;
+    if (inHeroSlideshow !== undefined) {
+      try {
+        const heroCfg = (await window.SakoDB.getHeroSlideshow()) || { enabled: true, interval: 5000, selectedNewsIds: [] };
+        let ids = Array.isArray(heroCfg.selectedNewsIds) ? [...heroCfg.selectedNewsIds] : [];
+        if (inHeroSlideshow) {
+          if (!ids.includes(String(id))) ids.push(String(id));
+        } else {
+          ids = ids.filter(i => String(i) !== String(id));
+        }
+        heroCfg.selectedNewsIds = ids;
+        await window.SakoDB.saveHeroSlideshow(heroCfg);
+      } catch (err) {
+        console.warn('Hero slideshow sync warning:', err);
+      }
+    }
+
     showToast('Berita berhasil disimpan!', 'success');
     closeNewsEditor();
     loadBeritaTab();
@@ -513,6 +541,253 @@ document.addEventListener('DOMContentLoaded', async () => {
     saveNewsSubmitBtnBottom.addEventListener('click', (e) => {
       e.preventDefault();
       handleSaveNews();
+    });
+  }
+
+  // --- 2.B HERO SLIDESHOW TAB LOGIC ---
+  let adminSlideshowTimer = null;
+  let adminSlideIndex = 0;
+
+  async function loadSlideshowTab() {
+    const newsList = (await window.SakoDB.getBerita()) || [];
+    const cfg = (await window.SakoDB.getHeroSlideshow()) || { enabled: true, interval: 5000, selectedNewsIds: [] };
+
+    const statusSelect = document.getElementById('slideshowStatusSelect');
+    const intervalSelect = document.getElementById('slideshowIntervalSelect');
+    const activeCountEl = document.getElementById('slideshowActiveCount');
+    const grid = document.getElementById('slideshowNewsGrid');
+
+    if (statusSelect) statusSelect.value = cfg.enabled ? 'true' : 'false';
+    if (intervalSelect) intervalSelect.value = String(cfg.interval || 5000);
+
+    const newsWithPhotos = newsList.filter(item => item.image && String(item.image).trim() !== '');
+
+    if (!newsWithPhotos.length) {
+      if (grid) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted); background: var(--admin-surface-2); border-radius: var(--radius-sm);">
+            Belum ada berita dengan gambar. Silakan buat atau tambahkan foto pada artikel berita terlebih dahulu.
+          </div>
+        `;
+      }
+      if (activeCountEl) activeCountEl.textContent = '0 foto aktif';
+      renderAdminSlideshowPreview([]);
+      return;
+    }
+
+    let selectedIds = Array.isArray(cfg.selectedNewsIds) && cfg.selectedNewsIds.length > 0
+      ? cfg.selectedNewsIds.map(String)
+      : newsWithPhotos.map(item => String(item.id));
+
+    if (grid) {
+      grid.innerHTML = '';
+      newsWithPhotos.forEach(item => {
+        const isChecked = selectedIds.includes(String(item.id));
+        const imgSrc = item.image.startsWith('http') || item.image.startsWith('data:')
+          ? item.image
+          : (item.image.startsWith('../') ? item.image : `../${item.image}`);
+
+        const card = document.createElement('div');
+        card.className = `slideshow-item-card ${isChecked ? 'selected' : ''}`;
+        card.style.background = 'var(--admin-surface-2)';
+        card.style.border = isChecked ? '1px solid var(--gold-400)' : '1px solid var(--admin-border)';
+        card.style.borderRadius = 'var(--radius-sm)';
+        card.style.overflow = 'hidden';
+        card.style.transition = 'all var(--transition)';
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+
+        card.innerHTML = `
+          <div style="position: relative; width: 100%; aspect-ratio: 16/10; overflow: hidden; background: #000;">
+            <img src="${imgSrc}" alt="${item.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='../assets/images/logo.png'" />
+            <span style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); color: var(--gold-300); font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; text-transform: uppercase;">
+              ${item.category || 'Berita'}
+            </span>
+            <span class="slide-badge-status" style="position: absolute; top: 10px; right: 10px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; ${isChecked ? 'background: rgba(30,120,50,0.9); color: #fff;' : 'background: rgba(80,80,80,0.85); color: #ccc;'}">
+              ${isChecked ? 'Aktif di Hero' : 'Tidak Aktif'}
+            </span>
+          </div>
+          <div style="padding: 14px 16px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
+            <div>
+              <h4 style="font-size: 14px; font-weight: 700; color: var(--text-main); line-height: 1.4; margin: 0 0 4px;">
+                ${item.title}
+              </h4>
+              <p style="font-size: 12px; color: var(--text-muted); margin: 0;">${item.dateFormatted || item.date || ''}</p>
+            </div>
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px 12px; border-radius: var(--radius-xs); background: ${isChecked ? 'rgba(230,180,34,0.12)' : 'var(--admin-surface)'}; border: 1px solid ${isChecked ? 'rgba(230,180,34,0.35)' : 'var(--admin-border)'};">
+              <input type="checkbox" class="slideshow-toggle-checkbox" data-id="${item.id}" ${isChecked ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--gold-primary); cursor: pointer;" />
+              <span style="font-size: 13px; font-weight: 600; color: ${isChecked ? 'var(--gold-400)' : 'var(--text-main)'};">Tampilkan di Slideshow</span>
+            </label>
+          </div>
+        `;
+
+        const checkbox = card.querySelector('.slideshow-toggle-checkbox');
+        checkbox.addEventListener('change', () => {
+          const checked = checkbox.checked;
+          const statusBadge = card.querySelector('.slide-badge-status');
+          const labelSpan = card.querySelector('label span');
+          const labelWrap = card.querySelector('label');
+
+          card.classList.toggle('selected', checked);
+          card.style.border = checked ? '1px solid var(--gold-400)' : '1px solid var(--admin-border)';
+          if (statusBadge) {
+            statusBadge.textContent = checked ? 'Aktif di Hero' : 'Tidak Aktif';
+            statusBadge.style.background = checked ? 'rgba(30,120,50,0.9)' : 'rgba(80,80,80,0.85)';
+            statusBadge.style.color = checked ? '#fff' : '#ccc';
+          }
+          if (labelSpan) {
+            labelSpan.style.color = checked ? 'var(--gold-400)' : 'var(--text-main)';
+          }
+          if (labelWrap) {
+            labelWrap.style.background = checked ? 'rgba(230,180,34,0.12)' : 'var(--admin-surface)';
+            labelWrap.style.borderColor = checked ? 'rgba(230,180,34,0.35)' : 'var(--admin-border)';
+          }
+          updateSlideshowActiveCount();
+          updateAdminSlideshowPreviewFromDOM(newsWithPhotos);
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    updateSlideshowActiveCount();
+    updateAdminSlideshowPreviewFromDOM(newsWithPhotos);
+  }
+
+  function updateSlideshowActiveCount() {
+    const checkboxes = document.querySelectorAll('.slideshow-toggle-checkbox');
+    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+    const totalCount = checkboxes.length;
+    const activeCountEl = document.getElementById('slideshowActiveCount');
+    if (activeCountEl) {
+      activeCountEl.textContent = `${checkedCount} dari ${totalCount} Foto Aktif`;
+    }
+  }
+
+  function updateAdminSlideshowPreviewFromDOM(newsList) {
+    const checkedIds = Array.from(document.querySelectorAll('.slideshow-toggle-checkbox:checked')).map(cb => String(cb.dataset.id));
+    const activeItems = newsList.filter(item => checkedIds.includes(String(item.id)));
+    renderAdminSlideshowPreview(activeItems);
+  }
+
+  function renderAdminSlideshowPreview(items) {
+    const previewWrapper = document.getElementById('adminSlideshowPreviewWrapper');
+    const previewDots = document.getElementById('adminPreviewDots');
+    if (!previewWrapper) return;
+
+    if (adminSlideshowTimer) {
+      clearInterval(adminSlideshowTimer);
+      adminSlideshowTimer = null;
+    }
+
+    if (!items || !items.length) {
+      previewWrapper.innerHTML = `
+        <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #111; color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px;">
+          Tidak ada foto aktif yang dipilih untuk slideshow.
+        </div>
+      `;
+      if (previewDots) previewDots.innerHTML = '';
+      return;
+    }
+
+    previewWrapper.innerHTML = '';
+    if (previewDots) previewDots.innerHTML = '';
+
+    items.forEach((item, idx) => {
+      const slide = document.createElement('div');
+      slide.className = `admin-preview-slide ${idx === 0 ? 'active' : ''}`;
+      slide.style.position = 'absolute';
+      slide.style.inset = '0';
+      slide.style.opacity = idx === 0 ? '1' : '0';
+      slide.style.transition = 'opacity 0.6s ease';
+      slide.style.pointerEvents = 'none';
+
+      const imgSrc = item.image.startsWith('http') || item.image.startsWith('data:')
+        ? item.image
+        : (item.image.startsWith('../') ? item.image : `../${item.image}`);
+
+      slide.innerHTML = `
+        <img src="${imgSrc}" alt="${item.title}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='../assets/images/logo.png'" />
+        <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);"></div>
+        <div style="position: absolute; left: 16px; right: 16px; bottom: 14px;">
+          <span style="font-size: 10px; font-weight: 700; color: var(--gold-300); text-transform: uppercase; background: rgba(230,180,34,0.2); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(230,180,34,0.3);">
+            ${item.category || 'Berita'}
+          </span>
+          <h4 style="font-size: 14px; font-weight: 700; color: #fff; margin: 4px 0 0; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ${item.title}
+          </h4>
+        </div>
+      `;
+      previewWrapper.appendChild(slide);
+
+      if (previewDots) {
+        const dot = document.createElement('span');
+        dot.style.width = idx === 0 ? '16px' : '6px';
+        dot.style.height = '6px';
+        dot.style.borderRadius = '999px';
+        dot.style.background = idx === 0 ? 'var(--gold-400)' : 'rgba(255,255,255,0.4)';
+        dot.style.transition = 'all 0.3s ease';
+        previewDots.appendChild(dot);
+      }
+    });
+
+    const slides = previewWrapper.querySelectorAll('.admin-preview-slide');
+    const dots = previewDots ? previewDots.children : [];
+    adminSlideIndex = 0;
+
+    if (slides.length > 1) {
+      adminSlideshowTimer = setInterval(() => {
+        adminSlideIndex = (adminSlideIndex + 1) % slides.length;
+        slides.forEach((s, i) => s.style.opacity = i === adminSlideIndex ? '1' : '0');
+        if (dots) {
+          Array.from(dots).forEach((d, i) => {
+            d.style.width = i === adminSlideIndex ? '16px' : '6px';
+            d.style.background = i === adminSlideIndex ? 'var(--gold-400)' : 'rgba(255,255,255,0.4)';
+          });
+        }
+      }, 3500);
+    }
+  }
+
+  // Save Slideshow Button Listener
+  const saveSlideshowBtn = document.getElementById('saveSlideshowBtn');
+  if (saveSlideshowBtn) {
+    saveSlideshowBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const checkboxes = document.querySelectorAll('.slideshow-toggle-checkbox:checked');
+      const selectedIds = Array.from(checkboxes).map(cb => String(cb.dataset.id));
+      const isEnabled = document.getElementById('slideshowStatusSelect')?.value === 'true';
+      const intervalVal = parseInt(document.getElementById('slideshowIntervalSelect')?.value, 10) || 5000;
+
+      const cfg = {
+        enabled: isEnabled,
+        interval: intervalVal,
+        selectedNewsIds: selectedIds
+      };
+
+      await window.SakoDB.saveHeroSlideshow(cfg);
+      showToast('Pengaturan Slideshow Hero berhasil disimpan dan disinkronkan!', 'success');
+    });
+  }
+
+  // Select / Deselect All Buttons
+  const selectAllSlidesBtn = document.getElementById('selectAllSlidesBtn');
+  if (selectAllSlidesBtn) {
+    selectAllSlidesBtn.addEventListener('click', () => {
+      document.querySelectorAll('.slideshow-toggle-checkbox').forEach(cb => {
+        cb.checked = true;
+        cb.dispatchEvent(new Event('change'));
+      });
+    });
+  }
+
+  const deselectAllSlidesBtn = document.getElementById('deselectAllSlidesBtn');
+  if (deselectAllSlidesBtn) {
+    deselectAllSlidesBtn.addEventListener('click', () => {
+      document.querySelectorAll('.slideshow-toggle-checkbox').forEach(cb => {
+        cb.checked = false;
+        cb.dispatchEvent(new Event('change'));
+      });
     });
   }
 
