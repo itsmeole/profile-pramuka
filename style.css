@@ -356,9 +356,11 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 
 .hero-content {
-  padding: 80px 0 80px 0;
+  padding: 80px 24px 80px 0;
   padding-left: max(24px, calc((100vw - var(--container)) / 2 + 24px));
-  z-index: 1;
+  max-width: min(840px, 92vw);
+  position: relative;
+  z-index: 2;
 }
 
 .hero-eyebrow {
@@ -447,8 +449,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .hero-banner-section {
   position: relative;
   min-height: 100dvh;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   align-items: center;
   padding-top: var(--navbar-h);
   background: var(--green-900);

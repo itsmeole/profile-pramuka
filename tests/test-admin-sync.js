@@ -395,15 +395,15 @@ async function runTests() {
 
   const docSlideshow = slideshowEnv.document;
   const slideTitles = Array.from(docSlideshow.querySelectorAll('.hero-slide-headline a')).map(a => a.textContent.trim());
-  const slideDotsCount = docSlideshow.querySelectorAll('.hero-slide-dot').length;
+  const slideBannerCount = docSlideshow.querySelectorAll('.hero-banner-slide').length;
 
   assert(slideTitles.length === 1 && slideTitles[0] === 'Pelatihan Jurnalistik & Cyber Sako Maarif NU',
     'Hero Slideshow: Hanya foto berita yang dipilih admin yang tampil di slideshow',
     `Expected: ["Pelatihan Jurnalistik & Cyber Sako Maarif NU"], Got: ${JSON.stringify(slideTitles)}`);
 
-  assert(slideDotsCount === 1,
-    'Hero Slideshow: Jumlah dot indikator sesuai dengan jumlah foto yang dipilih admin',
-    `Expected: 1, Got: ${slideDotsCount}`);
+  assert(slideBannerCount === 1,
+    'Hero Slideshow: Jumlah slide banner sesuai dengan jumlah foto yang dipilih admin',
+    `Expected: 1, Got: ${slideBannerCount}`);
 
   // Test 2: Admin updates selection in real-time to include both articles
   const updatedSlideshowCfg = {
