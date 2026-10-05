@@ -162,8 +162,11 @@
     constructor() {
       this.supabaseClient = null;
       this.isCloudConnected = false;
+      this.isNativeApi = false;
+      this.apiEndpoint = '/api/data.php';
       this.initLocalData();
       this.initSupabase();
+      this.detectNativeApi();
     }
 
     initLocalData() {
@@ -187,6 +190,57 @@
       }
       if (!localStorage.getItem(STORAGE_KEYS.CONFIG)) {
         localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(DEFAULT_SUPABASE_CONFIG));
+      }
+    }
+
+    // Deteksi otomatis apakah website berjalan di hosting dengan backend PHP/MySQL
+    async detectNativeApi() {
+      if (typeof window === 'undefined' || !window.location || !window.location.protocol.startsWith('http')) {
+        return;
+      }
+      // Lewati jika berjalan di environment unit test (JSDOM / Node.js)
+      if (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.includes('jsdom')) {
+        return;
+      }
+      if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+        return;
+      }
+
+      try {
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timeoutId = controller ? setTimeout(() => controller.abort(), 1200) : null;
+        const res = await fetch(this.apiEndpoint + '?action=status', {
+          method: 'GET',
+          signal: controller ? controller.signal : undefined
+        });
+        if (timeoutId) clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success) {
+            this.isNativeApi = true;
+            this.isCloudConnected = true;
+            console.log('[SakoDB] Connected to Native MySQL Hosting API:', this.apiEndpoint);
+            this.syncFromNativeApi();
+          }
+        }
+      } catch (e) {
+        // Berjalan offline atau preview statis, fallback ke localStorage
+      }
+    }
+
+    async syncFromNativeApi() {
+      if (!this.isNativeApi) return;
+      try {
+        await Promise.allSettled([
+          this.getTentang(),
+          this.getVisiMisi(),
+          this.getKepengurusan(),
+          this.getHeroSlideshow(),
+          this.getBerita()
+        ]);
+      } catch (e) {
+        // abaikan jika jaringan terputus
       }
     }
 
@@ -233,7 +287,20 @@
 
     // --- TENTANG KAMI ---
     async getTentang() {
-      if (this.supabaseClient) {
+      if (this.isNativeApi) {
+        try {
+          const res = await fetch(this.apiEndpoint + '?action=get_setting&key=tentang');
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.data) {
+              localStorage.setItem(STORAGE_KEYS.TENTANG, JSON.stringify(json.data));
+              return json.data;
+            }
+          }
+        } catch (e) {
+          console.warn('Native API fetch fallback for tentang:', e);
+        }
+      } else if (this.supabaseClient) {
         try {
           const { data, error } = await this.supabaseClient
             .from('sako_settings')
@@ -257,7 +324,17 @@
 
     async saveTentang(data) {
       localStorage.setItem(STORAGE_KEYS.TENTANG, JSON.stringify(data));
-      if (this.supabaseClient) {
+      if (this.isNativeApi) {
+        try {
+          await fetch(this.apiEndpoint + '?action=save_setting', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'tentang', data })
+          });
+        } catch (e) {
+          console.error('Failed to sync tentang to native database:', e);
+        }
+      } else if (this.supabaseClient) {
         try {
           await this.supabaseClient.from('sako_settings').upsert({
             key: 'tentang',
@@ -273,7 +350,20 @@
 
     // --- VISI MISI ---
     async getVisiMisi() {
-      if (this.supabaseClient) {
+      if (this.isNativeApi) {
+        try {
+          const res = await fetch(this.apiEndpoint + '?action=get_setting&key=visimisi');
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.data) {
+              localStorage.setItem(STORAGE_KEYS.VISIMISI, JSON.stringify(json.data));
+              return json.data;
+            }
+          }
+        } catch (e) {
+          console.warn('Native API fetch fallback for visimisi:', e);
+        }
+      } else if (this.supabaseClient) {
         try {
           const { data, error } = await this.supabaseClient
             .from('sako_settings')
@@ -297,7 +387,17 @@
 
     async saveVisiMisi(data) {
       localStorage.setItem(STORAGE_KEYS.VISIMISI, JSON.stringify(data));
-      if (this.supabaseClient) {
+      if (this.isNativeApi) {
+        try {
+          await fetch(this.apiEndpoint + '?action=save_setting', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'visimisi', data })
+          });
+        } catch (e) {
+          console.error('Failed to sync visimisi to native database:', e);
+        }
+      } else if (this.supabaseClient) {
         try {
           await this.supabaseClient.from('sako_settings').upsert({
             key: 'visimisi',
@@ -313,7 +413,20 @@
 
     // --- KEPENGURUSAN ---
     async getKepengurusan() {
-      if (this.supabaseClient) {
+      if (this.isNativeApi) {
+        try {
+          const res = await fetch(this.apiEndpoint + '?action=get_setting&key=kepengurusan');
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.data) {
+              localStorage.setItem(STORAGE_KEYS.KEPENGURUSAN, JSON.stringify(json.data));
+              return json.data;
+            }
+          }
+        } catch (e) {
+          console.warn('Native API fetch fallback for kepengurusan:', e);
+        }
+      } else if (this.supabaseClient) {
         try {
           const { data, error } = await this.supabaseClient
             .from('sako_settings')
@@ -337,7 +450,17 @@
 
     async saveKepengurusan(data) {
       localStorage.setItem(STORAGE_KEYS.KEPENGURUSAN, JSON.stringify(data));
-      if (this.supabaseClient) {
+      if (this.isNativeApi) {
+        try {
+          await fetch(this.apiEndpoint + '?action=save_setting', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'kepengurusan', data })
+          });
+        } catch (e) {
+          console.error('Failed to sync kepengurusan to native database:', e);
+        }
+      } else if (this.supabaseClient) {
         try {
           await this.supabaseClient.from('sako_settings').upsert({
             key: 'kepengurusan',
@@ -364,7 +487,25 @@
     async getBerita() {
       const deletedIds = this.getDeletedNewsIds();
 
-      if (this.supabaseClient) {
+      if (this.isNativeApi) {
+        try {
+          const res = await fetch(this.apiEndpoint + '?action=get_news');
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+              const activeList = json.data.filter(item => !deletedIds.includes(String(item.id)));
+              const normalized = activeList.map(item => ({
+                ...item,
+                dateFormatted: item.dateformatted || item.dateFormatted || item.date
+              }));
+              localStorage.setItem(STORAGE_KEYS.BERITA, JSON.stringify(normalized));
+              return normalized;
+            }
+          }
+        } catch (e) {
+          console.warn('Native API fetch fallback for berita:', e);
+        }
+      } else if (this.supabaseClient) {
         try {
           const { data, error } = await this.supabaseClient
             .from('sako_news')
@@ -423,7 +564,17 @@
 
       localStorage.setItem(STORAGE_KEYS.BERITA, JSON.stringify(list));
 
-      if (this.supabaseClient) {
+      if (this.isNativeApi) {
+        try {
+          await fetch(this.apiEndpoint + '?action=save_news', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item)
+          });
+        } catch (e) {
+          console.error('Failed to sync single news to native database:', e);
+        }
+      } else if (this.supabaseClient) {
         try {
           const cloudPayload = {
             id: item.id,
@@ -466,8 +617,18 @@
         localStorage.setItem('sako_deleted_news_ids', JSON.stringify(deletedIds));
       }
 
-      // 3. Delete from Supabase if connected
-      if (this.supabaseClient) {
+      // 3. Delete from Native MySQL or Supabase
+      if (this.isNativeApi) {
+        try {
+          await fetch(this.apiEndpoint + '?action=delete_news', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+          });
+        } catch (e) {
+          console.warn('Failed to delete news from native database:', e);
+        }
+      } else if (this.supabaseClient) {
         try {
           const { error } = await this.supabaseClient.from('sako_news').delete().eq('id', id);
           if (error) {
@@ -482,7 +643,20 @@
 
     // --- HERO SLIDESHOW ---
     async getHeroSlideshow() {
-      if (this.supabaseClient) {
+      if (this.isNativeApi) {
+        try {
+          const res = await fetch(this.apiEndpoint + '?action=get_setting&key=hero_slideshow');
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.data) {
+              localStorage.setItem(STORAGE_KEYS.HERO_SLIDESHOW, JSON.stringify(json.data));
+              return json.data;
+            }
+          }
+        } catch (e) {
+          console.warn('Native API fetch fallback for hero_slideshow:', e);
+        }
+      } else if (this.supabaseClient) {
         try {
           const { data, error } = await this.supabaseClient
             .from('sako_settings')
@@ -507,7 +681,17 @@
 
     async saveHeroSlideshow(data) {
       localStorage.setItem(STORAGE_KEYS.HERO_SLIDESHOW, JSON.stringify(data));
-      if (this.supabaseClient) {
+      if (this.isNativeApi) {
+        try {
+          await fetch(this.apiEndpoint + '?action=save_setting', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'hero_slideshow', data })
+          });
+        } catch (e) {
+          console.error('Failed to sync hero_slideshow to native database:', e);
+        }
+      } else if (this.supabaseClient) {
         try {
           await this.supabaseClient.from('sako_settings').upsert({
             key: 'hero_slideshow',
@@ -519,6 +703,35 @@
         }
       }
       return true;
+    }
+
+    // --- UPLOAD IMAGE (NATIVE HOSTING / BASE64 FALLBACK) ---
+    async uploadImage(file) {
+      if (this.isNativeApi && typeof FormData !== 'undefined') {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          const res = await fetch('/api/upload.php', {
+            method: 'POST',
+            body: formData
+          });
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.url) {
+              return json.url;
+            }
+          }
+        } catch (e) {
+          console.warn('Native upload failed, fallback to base64 data url:', e);
+        }
+      }
+      // Fallback: convert file to Base64 Data URL
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
     }
 
     // --- AUTHENTICATION ---
@@ -575,45 +788,84 @@
       }
     }
 
-    // --- SYNC LOCAL TO CLOUD ---
+    // --- SYNC LOCAL TO CLOUD / MYSQL ---
     async syncAllToCloud() {
-      if (!this.supabaseClient) {
-        return { success: false, message: 'Supabase client belum siap.' };
-      }
-      try {
-        const tentang = await this.getTentang();
-        const visimisi = await this.getVisiMisi();
-        const kepengurusan = await this.getKepengurusan();
-        const berita = await this.getBerita();
+      if (this.isNativeApi) {
+        try {
+          const tentang = await this.getTentang();
+          const visimisi = await this.getVisiMisi();
+          const kepengurusan = await this.getKepengurusan();
+          const heroSlideshow = await this.getHeroSlideshow();
+          const berita = await this.getBerita();
 
-        await this.supabaseClient.from('sako_settings').upsert([
-          { key: 'tentang', content: tentang, updated_at: new Date().toISOString() },
-          { key: 'visimisi', content: visimisi, updated_at: new Date().toISOString() },
-          { key: 'kepengurusan', content: kepengurusan, updated_at: new Date().toISOString() }
-        ], { onConflict: 'key' });
+          await fetch(this.apiEndpoint + '?action=save_setting', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'tentang', data: tentang })
+          });
+          await fetch(this.apiEndpoint + '?action=save_setting', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'visimisi', data: visimisi })
+          });
+          await fetch(this.apiEndpoint + '?action=save_setting', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'kepengurusan', data: kepengurusan })
+          });
+          await fetch(this.apiEndpoint + '?action=save_setting', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'hero_slideshow', data: heroSlideshow })
+          });
+          await fetch(this.apiEndpoint + '?action=save_news_all', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ news: berita })
+          });
 
-        for (const item of berita) {
-          const cloudPayload = {
-            id: item.id,
-            title: item.title,
-            slug: item.slug || (item.id + '.html'),
-            category: item.category || 'Berita',
-            author: item.author || 'SAKOMA',
-            date: item.date || new Date().toISOString().split('T')[0],
-            dateformatted: item.dateformatted || item.dateFormatted,
-            image: item.image,
-            featured: !!item.featured,
-            excerpt: item.excerpt,
-            content: item.content,
-            updated_at: new Date().toISOString()
-          };
-          await this.supabaseClient.from('sako_news').upsert(cloudPayload, { onConflict: 'id' });
+          return { success: true, message: 'Seluruh data berhasil disinkronkan ke Database MySQL Rumahweb!' };
+        } catch (err) {
+          return { success: false, message: err.message };
         }
+      } else if (this.supabaseClient) {
+        try {
+          const tentang = await this.getTentang();
+          const visimisi = await this.getVisiMisi();
+          const kepengurusan = await this.getKepengurusan();
+          const berita = await this.getBerita();
 
-        return { success: true, message: 'Seluruh data berhasil disinkronkan ke Supabase Cloud!' };
-      } catch (err) {
-        return { success: false, message: err.message };
+          await this.supabaseClient.from('sako_settings').upsert([
+            { key: 'tentang', content: tentang, updated_at: new Date().toISOString() },
+            { key: 'visimisi', content: visimisi, updated_at: new Date().toISOString() },
+            { key: 'kepengurusan', content: kepengurusan, updated_at: new Date().toISOString() }
+          ], { onConflict: 'key' });
+
+          for (const item of berita) {
+            const cloudPayload = {
+              id: item.id,
+              title: item.title,
+              slug: item.slug || (item.id + '.html'),
+              category: item.category || 'Berita',
+              author: item.author || 'SAKOMA',
+              date: item.date || new Date().toISOString().split('T')[0],
+              dateformatted: item.dateformatted || item.dateFormatted,
+              image: item.image,
+              featured: !!item.featured,
+              excerpt: item.excerpt,
+              content: item.content,
+              updated_at: new Date().toISOString()
+            };
+            await this.supabaseClient.from('sako_news').upsert(cloudPayload, { onConflict: 'id' });
+          }
+
+          return { success: true, message: 'Seluruh data berhasil disinkronkan ke Supabase Cloud!' };
+        } catch (err) {
+          return { success: false, message: err.message };
+        }
       }
+
+      return { success: false, message: 'Database cloud (MySQL atau Supabase) belum terhubung.' };
     }
   }
 

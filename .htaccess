@@ -1,0 +1,24 @@
+# ============================================================
+# .htaccess untuk Hosting Rumahweb (cPanel / Apache / LiteSpeed)
+# SAKO Ma'arif NU Jawa Barat
+# ============================================================
+
+RewriteEngine On
+
+# 1. Pastikan folder /riki membuka riki/index.html secara otomatis
+DirectoryIndex index.html index.php
+
+# 2. Redirect HTTP ke HTTPS otomatis
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# 3. Akses halaman tanpa akhiran .html (opsional & rapi)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.html -f
+RewriteRule ^(.*)$ $1.html [L]
+
+# 4. Keamanan: Larang akses langsung ke file sensitif
+<FilesMatch "^\.env|^\.git|database\.sql|package\.json|package-lock\.json">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
