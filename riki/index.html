@@ -664,6 +664,24 @@
               </button>
             </form>
           </div>
+
+          <div class="admin-card" style="max-width: 540px; margin-top: 24px;">
+            <h3 class="admin-card-title">Cadangkan &amp; Migrasi Data</h3>
+            <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.6; margin-bottom: 16px;">
+              Unduh seluruh data yang telah Anda atur (berita, pengurus, visi-misi, pilar, dan slideshow) dalam format JSON. File ini dapat Anda impor ke hosting Rumahweb agar data yang telah diinput tidak hilang.
+            </p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <button type="button" class="btn-primary" id="exportDataBtn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Ekspor Cadangan Data (.json)</span>
+              </button>
+              <label class="btn-outline" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 0;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span>Impor Data Cadangan</span>
+                <input type="file" id="importDataInput" accept=".json" style="display: none;" />
+              </label>
+            </div>
+          </div>
         </section>
 
       </div>

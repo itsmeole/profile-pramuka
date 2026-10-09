@@ -1090,6 +1090,78 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('adminNewPassword').value = '';
   });
 
+  // --- PENCADANGAN & MIGRASI DATA ---
+  const exportBtn = document.getElementById('exportDataBtn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', async () => {
+      try {
+        const payload = {
+          version: '1.0',
+          exportedAt: new Date().toISOString(),
+          tentang: await window.SakoDB.getTentang(),
+          visimisi: await window.SakoDB.getVisiMisi(),
+          kepengurusan: await window.SakoDB.getKepengurusan(),
+          berita: await window.SakoDB.getBerita(),
+          heroSlideshow: await window.SakoDB.getHeroSlideshow()
+        };
+
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const dateStr = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `backup-sako-pramuka-${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast('Data berhasil diekspor sebagai file JSON!', 'success');
+      } catch (err) {
+        console.error('Gagal mengekspor data:', err);
+        showToast('Gagal mengekspor data!', 'error');
+      }
+    });
+  }
+
+  const importInput = document.getElementById('importDataInput');
+  if (importInput) {
+    importInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if (!imported || typeof imported !== 'object') {
+            throw new Error('Format file JSON tidak valid.');
+          }
+
+          if (imported.tentang) await window.SakoDB.saveTentang(imported.tentang);
+          if (imported.visimisi) await window.SakoDB.saveVisiMisi(imported.visimisi);
+          if (imported.kepengurusan) await window.SakoDB.saveKepengurusan(imported.kepengurusan);
+          if (imported.heroSlideshow) await window.SakoDB.saveHeroSlideshow(imported.heroSlideshow);
+
+          if (Array.isArray(imported.berita)) {
+            for (const item of imported.berita) {
+              await window.SakoDB.saveBerita(item);
+            }
+          }
+
+          showToast('Data berhasil dipulihkan & disinkronkan!', 'success');
+          setTimeout(() => window.location.reload(), 1000);
+        } catch (err) {
+          console.error('Gagal mengimpor data:', err);
+          showToast('Format file cadangan tidak valid atau rusak.', 'error');
+        } finally {
+          e.target.value = '';
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
+
   // Initial Run
   checkAuth();
 });
