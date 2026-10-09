@@ -1003,19 +1003,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       card.style.padding = '18px';
       card.style.marginBottom = '16px';
       card.innerHTML = `
-        <div class="form-group">
-          <label class="form-label">Nama Bidang Kerja #${idx + 1}</label>
-          <input type="text" class="form-input bidang-name" value="${b.name || ''}" />
-        </div>
         <div class="form-grid-2">
-          <div class="form-group" style="margin-bottom: 0;">
+          <div class="form-group">
+            <label class="form-label">Nama Bidang Kerja #${idx + 1}</label>
+            <input type="text" class="form-input bidang-name" value="${(b.name || '').replace(/"/g, '&quot;')}" />
+          </div>
+          <div class="form-group">
             <label class="form-label">Ketua Bidang</label>
-            <input type="text" class="form-input bidang-ketua" value="${b.ketua || ''}" />
+            <input type="text" class="form-input bidang-ketua" value="${(b.ketua || '').replace(/"/g, '&quot;')}" />
           </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Anggota Bidang (Pisahkan baris atau koma)</label>
-            <input type="text" class="form-input bidang-anggota" value="${(b.anggota || []).join(', ')}" />
-          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Anggota Bidang (Pisahkan tiap nama dengan baris baru atau koma)</label>
+          <textarea class="form-textarea bidang-anggota" rows="3" placeholder="Tulis nama anggota, pisahkan dengan baris baru..." style="resize: vertical; min-height: 80px;">${(b.anggota || []).join('\n')}</textarea>
         </div>
       `;
       bidangContainer.appendChild(card);
