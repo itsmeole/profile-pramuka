@@ -383,6 +383,49 @@ async function runTests() {
     'Beranda: Link berita admin mengarah ke artikel-kmd.html dengan parameter ID yang valid',
     `Got: "${newsReadMoreHref}"`);
 
+  // Verifikasi 4 berita dan 4 galeri pada landing page (index.html)
+  const fourBeritaList = [
+    ...testBeritaList,
+    {
+      id: 'berita-3',
+      title: 'Kegiatan Perkemahan Santri Wilayah 3',
+      image: 'assets/images/kemah1.png',
+      date: '2026-10-05',
+      category: 'Kemah'
+    },
+    {
+      id: 'berita-4',
+      title: 'Pelantikan Pembina Mahir SAKO NU',
+      image: 'assets/images/kemah2.png',
+      date: '2026-10-08',
+      category: 'Pelatihan'
+    },
+    {
+      id: 'berita-5',
+      title: 'Berita Kelima Cadangan',
+      image: 'assets/images/kemah3.png',
+      date: '2026-10-09',
+      category: 'Bakti'
+    }
+  ];
+
+  const index4Env = createDOMForPage('index.html', {
+    sako_data_berita: fourBeritaList
+  });
+  index4Env.window.eval(mainJsCode);
+  await new Promise(r => setTimeout(r, 200));
+
+  const docIndex4 = index4Env.document;
+  const renderedCardsCount = docIndex4.querySelectorAll('.news-grid .news-card').length;
+  assert(renderedCardsCount === 4,
+    'Beranda: Menampilkan tepat 4 berita di bagian Kegiatan & Informasi',
+    `Expected 4, got ${renderedCardsCount}`);
+
+  const renderedGalleryCount = docIndex4.querySelectorAll('#gallery-preview-grid .gallery-preview-item').length;
+  assert(renderedGalleryCount === 4,
+    'Beranda: Menampilkan tepat 4 foto dokumentasi kegiatan di preview galeri tanpa area kosong',
+    `Expected 4, got ${renderedGalleryCount}`);
+
   // Verifikasi artikel dinamis dapat dibuka dan di-hydrate di halaman artikel-kmd.html
   const articlePageEnv = createDOMForPage('artikel-kmd.html?id=rapat-kerja-daerah-2026', {
     sako_data_berita: testBeritaList

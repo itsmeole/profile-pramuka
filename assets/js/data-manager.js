@@ -129,6 +129,34 @@
         featured: false,
         excerpt: "Kursus Mahir Dasar (KMD) Pramuka Sako Pandu Maarif NU Jawa Barat. Tingkatkan Kompetensi, Bangun Karakter, Siapkan Pembina Hebat!",
         content: `Kursus Mahir Dasar (KMD) Pramuka Sako Pandu Maarif NU Jawa Barat merupakan program pelatihan resmi berstandar kepramukaan nasional yang diselenggarakan untuk mencetak pembina-pembina pramuka yang kompeten, berakhlak mulia, dan berakar pada nilai-nilai ke-NU-an.`
+      },
+      {
+        id: "rakerda-sako-2026",
+        title: "Rapat Kerja Daerah Sako Pandu Maarif NU Jawa Barat 2026",
+        slug: "artikel-kmd.html",
+        category: "Organisasi",
+        author: "SAKOMA",
+        date: "2026-09-20",
+        dateFormatted: "20 September 2026",
+        dateformatted: "20 September 2026",
+        image: "assets/images/kemah3.png",
+        featured: false,
+        excerpt: "Konsolidasi organisasi dan perumusan arah program strategis pembinaan kepramukaan santri se-Jawa Barat menuju kemandirian gugus depan.",
+        content: `Rapat Kerja Daerah (Rakerda) Sako Pandu Maarif NU Jawa Barat sukses menetapkan arah kebijakan strategis organisasi. Agenda difokuskan pada penguatan sinergi gugus depan madrasah, standardisasi mutu pembina, serta peningkatan kemandirian organisasi.`
+      },
+      {
+        id: "bakti-lingkungan-2026",
+        title: "Aksi Peduli Lingkungan & Gerakan Pramuka Menanam Sako NU",
+        slug: "artikel-kmd.html",
+        category: "Bakti Masyarakat",
+        author: "SAKOMA",
+        date: "2026-09-15",
+        dateFormatted: "15 September 2026",
+        dateformatted: "15 September 2026",
+        image: "assets/images/kemah4.png",
+        featured: false,
+        excerpt: "Wujud kepedulian Pramuka Sako Maarif NU terhadap kelestarian alam melalui aksi penanaman pohon dan edukasi ramah lingkungan.",
+        content: `Sebagai pengejawantahan dari Dasa Darma Pramuka dan ajaran Islam ramah lingkungan, Sako Pandu Maarif NU Jawa Barat menggelar bakti lingkungan di kawasan perkemahan. Aksi ini menanamkan kesadaran ekologis bagi para santri.`
       }
     ],
     heroSlideshow: {

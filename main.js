@@ -705,9 +705,9 @@
       if (beritaList && beritaList.length && newsGrid) {
         if (isIndex) {
           newsGrid.innerHTML = '';
-          beritaList.slice(0, 3).forEach((item, idx) => {
+          beritaList.slice(0, 4).forEach((item, idx) => {
             const article = document.createElement('article');
-            article.className = `news-card reveal reveal-delay-${idx + 1}`;
+            article.className = `news-card reveal reveal-delay-${(idx % 4) + 1}`;
             const targetUrl = getArticleUrl(item);
             article.innerHTML = `
               <div class="news-card-img">
@@ -911,8 +911,26 @@
 
         if (galleryPreviewGrid) {
           galleryPreviewGrid.innerHTML = '';
-          const previewPhotos = newsPhotos.slice(0, 3);
-          previewPhotos.forEach((photo, idx) => {
+          const fallbackGallery = [
+            { image: 'assets/images/kemah1.png', title: 'Kemah Santri Pramuka Terpadu' },
+            { image: 'assets/images/kemah2.png', title: 'Kursus Mahir Dasar (KMD) Pramuka' },
+            { image: 'assets/images/kemah3.png', title: 'Apel Akbar & Kegiatan Pramuka NU' },
+            { image: 'assets/images/kemah4.png', title: 'Bakti Lingkungan & Kemah Lapangan' }
+          ];
+
+          let previewPhotos = (newsPhotos && newsPhotos.length) ? newsPhotos.slice(0, 4) : [];
+          if (previewPhotos.length < 4) {
+            const existingImages = new Set(previewPhotos.map(p => p.image));
+            for (const fb of fallbackGallery) {
+              if (previewPhotos.length >= 4) break;
+              if (!existingImages.has(fb.image)) {
+                previewPhotos.push(fb);
+                existingImages.add(fb.image);
+              }
+            }
+          }
+
+          previewPhotos.slice(0, 4).forEach((photo, idx) => {
             const a = document.createElement('a');
             a.href = 'galeri.html';
             a.className = `gallery-preview-item item-${idx + 1}`;
