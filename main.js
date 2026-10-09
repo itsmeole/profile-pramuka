@@ -282,11 +282,19 @@
 
   function renderPersonList(container, names) {
     if (!container) return;
-    if (!names || !names.length) {
-      container.innerHTML = '<div class="kepeng-person-item"><span style="color:var(--text-muted);font-size:13px;padding:4px 0;">Belum ada data</span></div>';
+    const roleSection = container.closest('.kepeng-role-section');
+    const validNames = (names || []).map(n => typeof n === 'string' ? n.trim() : '').filter(Boolean);
+    if (!validNames.length) {
+      if (roleSection) {
+        roleSection.style.display = 'none';
+      }
+      container.innerHTML = '';
       return;
     }
-    container.innerHTML = names.map(name => `
+    if (roleSection) {
+      roleSection.style.display = '';
+    }
+    container.innerHTML = validNames.map(name => `
       <div class="kepeng-person-item">
         <div class="kepeng-avatar-sm">${getInitials(name)}</div>
         <span>${name}</span>
@@ -551,9 +559,15 @@
             const mabiKetuaName = document.getElementById('mabiKetuaName') || document.querySelector('.kepeng-person-name');
             const mabiKetuaRole = document.getElementById('mabiKetuaRole') || document.querySelector('.kepeng-person-role');
             const mabiKetuaAvatar = document.getElementById('mabiKetuaAvatar') || document.querySelector('.kepeng-avatar');
-            if (mabiKetuaName && kep.mabisako.ketua?.name) mabiKetuaName.textContent = kep.mabisako.ketua.name;
+            const mabiKetuaSection = (mabiKetuaName || mabiKetuaRole || mabiKetuaAvatar)?.closest('.kepeng-role-section');
+            const mabiKetuaVal = kep.mabisako.ketua?.name ? kep.mabisako.ketua.name.trim() : '';
+
+            if (mabiKetuaSection) {
+              mabiKetuaSection.style.display = mabiKetuaVal ? '' : 'none';
+            }
+            if (mabiKetuaName && mabiKetuaVal) mabiKetuaName.textContent = mabiKetuaVal;
             if (mabiKetuaRole && kep.mabisako.ketua?.role) mabiKetuaRole.textContent = kep.mabisako.ketua.role;
-            if (mabiKetuaAvatar && kep.mabisako.ketua?.name) mabiKetuaAvatar.textContent = getInitials(kep.mabisako.ketua.name);
+            if (mabiKetuaAvatar && mabiKetuaVal) mabiKetuaAvatar.textContent = getInitials(mabiKetuaVal);
 
             renderPersonList(document.getElementById('mabiWakilList'), kep.mabisako.wakilKetua);
             renderPersonList(document.getElementById('mabiSekretarisList'), kep.mabisako.sekretaris);
@@ -565,9 +579,15 @@
             const pimpinanKetuaName = document.getElementById('pimpinanKetuaName') || document.querySelectorAll('.kepeng-person-name')[1];
             const pimpinanKetuaRole = document.getElementById('pimpinanKetuaRole') || document.querySelectorAll('.kepeng-person-role')[1];
             const pimpinanKetuaAvatar = document.getElementById('pimpinanKetuaAvatar') || document.querySelectorAll('.kepeng-avatar')[1];
-            if (pimpinanKetuaName && kep.pimpinan.ketua?.name) pimpinanKetuaName.textContent = kep.pimpinan.ketua.name;
+            const pimpinanKetuaSection = (pimpinanKetuaName || pimpinanKetuaRole || pimpinanKetuaAvatar)?.closest('.kepeng-role-section');
+            const pimpinanKetuaVal = kep.pimpinan.ketua?.name ? kep.pimpinan.ketua.name.trim() : '';
+
+            if (pimpinanKetuaSection) {
+              pimpinanKetuaSection.style.display = pimpinanKetuaVal ? '' : 'none';
+            }
+            if (pimpinanKetuaName && pimpinanKetuaVal) pimpinanKetuaName.textContent = pimpinanKetuaVal;
             if (pimpinanKetuaRole && kep.pimpinan.ketua?.role) pimpinanKetuaRole.textContent = kep.pimpinan.ketua.role;
-            if (pimpinanKetuaAvatar && kep.pimpinan.ketua?.name) pimpinanKetuaAvatar.textContent = getInitials(kep.pimpinan.ketua.name);
+            if (pimpinanKetuaAvatar && pimpinanKetuaVal) pimpinanKetuaAvatar.textContent = getInitials(pimpinanKetuaVal);
 
             renderPersonList(document.getElementById('pimpinanWakilList'), kep.pimpinan.wakilKetua);
             renderPersonList(document.getElementById('pimpinanSekretarisList'), kep.pimpinan.sekretaris);

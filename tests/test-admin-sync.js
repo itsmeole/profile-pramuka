@@ -180,6 +180,26 @@ async function runTests() {
          bidangGridText.includes('Iqbal Tawakal, S.H.'),
     'Bidang Kerja: Data nama bidang, ketua bidang, dan anggota diperbarui di web profile');
 
+  // Verifikasi Posisi/Jabatan Kosong Tidak Ditampilkan
+  const kepengEmptyEnv = createDOMForPage('kepengurusan.html', {
+    sako_data_kepengurusan: {
+      ...testKepengurusanData,
+      mabisako: {
+        ...testKepengurusanData.mabisako,
+        wakilKetua: []
+      }
+    }
+  });
+  kepengEmptyEnv.window.eval(mainJsCode);
+  await new Promise(r => setTimeout(r, 200));
+
+  const docEmptyKepeng = kepengEmptyEnv.document;
+  const mabiWakilSection = docEmptyKepeng.getElementById('mabiWakilList')?.closest('.kepeng-role-section');
+  assert(mabiWakilSection?.style.display === 'none',
+    'Kepengurusan: Jabatan yang kosong disembunyikan dan tidak ditampilkan di web profile');
+  assert(!docEmptyKepeng.body.textContent.includes('Belum ada data'),
+    'Kepengurusan: Teks "Belum ada data" tidak lagi muncul di web profile');
+
   // --------------------------------------------------------------------------
   // TEST SUITE 2: PROFIL ORGANISASI (profil.html)
   // --------------------------------------------------------------------------
