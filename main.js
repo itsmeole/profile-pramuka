@@ -730,52 +730,70 @@
           });
           initScrollReveal();
         } else if (isBerita) {
-          const featuredWrap = document.querySelector('.news-card.featured');
+          const featuredContainer = document.getElementById('featuredNewsContainer') || document.querySelector('.berita-section .container > div:first-child');
           const featuredItem = beritaList.find(b => b.featured) || beritaList[0];
 
-          if (featuredWrap && featuredItem) {
+          if (featuredContainer && featuredItem) {
             const targetUrl = getArticleUrl(featuredItem);
-            const img = featuredWrap.querySelector('.news-card-img img');
-            const cat = featuredWrap.querySelector('.news-category');
-            const date = featuredWrap.querySelector('.news-date');
-            const titleA = featuredWrap.querySelector('.news-title a');
-            const excerpt = featuredWrap.querySelector('.news-excerpt');
-            const btn = featuredWrap.querySelector('.btn');
-
-            if (img) img.src = featuredItem.image || 'assets/images/kemah1.png';
-            if (cat) cat.textContent = featuredItem.category || 'Berita';
-            if (date) date.textContent = featuredItem.dateFormatted || featuredItem.date || '';
-            if (titleA) { titleA.textContent = featuredItem.title; titleA.href = targetUrl; }
-            if (excerpt) excerpt.textContent = featuredItem.excerpt || '';
-            if (btn) btn.href = targetUrl;
-          }
-
-          const otherNews = beritaList.filter(b => b.id !== featuredItem.id);
-          if (otherNews.length) {
-            newsGrid.innerHTML = '';
-            otherNews.forEach((item, idx) => {
-              const article = document.createElement('article');
-              article.className = `news-card reveal reveal-delay-${(idx % 3) + 1}`;
-              const targetUrl = getArticleUrl(item);
-              article.innerHTML = `
-                <div class="news-card-img">
-                  <img src="${item.image || 'assets/images/kemah2.png'}" alt="${item.title}" onerror="this.parentElement.classList.add('img-fallback')" />
-                  <span class="news-category">${item.category || 'Berita'}</span>
+            featuredContainer.innerHTML = `
+              <article class="news-card featured" style="max-width:100%;">
+                <div class="news-card-img" style="aspect-ratio:21/8;">
+                  <img src="${featuredItem.image || 'assets/images/kemah1.png'}" alt="${featuredItem.title}" onerror="this.parentElement.classList.add('img-fallback')" />
+                  <span class="news-category">${featuredItem.category || 'Berita'}</span>
                 </div>
                 <div class="news-card-body">
                   <div class="news-meta">
-                    <span class="news-author">${item.author || 'SAKOMA'}</span>
-                    <span class="news-date">${item.dateFormatted || item.date || ''}</span>
+                    <span class="news-author">${featuredItem.author || 'SAKOMA'}</span>
+                    <span class="news-date">${featuredItem.dateFormatted || featuredItem.date || ''}</span>
                   </div>
-                  <h3 class="news-title">
-                    <a href="${targetUrl}">${item.title}</a>
-                  </h3>
-                  <p class="news-excerpt">${item.excerpt || ''}</p>
-                  <a href="${targetUrl}" class="news-readmore">Baca Selengkapnya →</a>
+                  <h2 class="news-title" style="font-size:22px;">
+                    <a href="${targetUrl}">${featuredItem.title}</a>
+                  </h2>
+                  <p class="news-excerpt" style="-webkit-line-clamp:4;">${featuredItem.excerpt || ''}</p>
+                  <a href="${targetUrl}" class="btn btn-green" style="margin-top:12px;width:fit-content;">Baca Selengkapnya</a>
                 </div>
+              </article>
+            `;
+          }
+
+          const otherNews = beritaList.filter(b => b.id !== featuredItem?.id);
+          const gridEl = document.getElementById('berita-grid') || document.querySelector('.berita-grid');
+          if (gridEl) {
+            gridEl.innerHTML = '';
+            if (otherNews.length) {
+              otherNews.forEach((item, idx) => {
+                const article = document.createElement('article');
+                article.className = `news-card reveal reveal-delay-${(idx % 3) + 1}`;
+                const targetUrl = getArticleUrl(item);
+                article.innerHTML = `
+                  <div class="news-card-img">
+                    <img src="${item.image || 'assets/images/kemah2.png'}" alt="${item.title}" onerror="this.parentElement.classList.add('img-fallback')" />
+                    <span class="news-category">${item.category || 'Berita'}</span>
+                  </div>
+                  <div class="news-card-body">
+                    <div class="news-meta">
+                      <span class="news-author">${item.author || 'SAKOMA'}</span>
+                      <span class="news-date">${item.dateFormatted || item.date || ''}</span>
+                    </div>
+                    <h3 class="news-title">
+                      <a href="${targetUrl}">${item.title}</a>
+                    </h3>
+                    <p class="news-excerpt">${item.excerpt || ''}</p>
+                    <a href="${targetUrl}" class="news-readmore">Baca Selengkapnya →</a>
+                  </div>
+                `;
+                gridEl.appendChild(article);
+              });
+            } else {
+              gridEl.innerHTML = `
+                <article class="news-card" style="grid-column:1/-1;border-style:dashed;background:var(--bg-subtle);display:flex;align-items:center;justify-content:center;min-height:220px;">
+                  <div style="text-align:center;padding:32px;">
+                    <p style="font-size:14px;font-weight:600;color:var(--text-muted);">Belum ada berita lainnya</p>
+                    <p style="font-size:13px;color:var(--text-faint);margin-top:4px;">Pantau terus informasi terbaru SAKO Ma'arif NU Jawa Barat</p>
+                  </div>
+                </article>
               `;
-              newsGrid.appendChild(article);
-            });
+            }
             initScrollReveal();
           }
         }

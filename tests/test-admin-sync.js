@@ -335,6 +335,19 @@ async function runTests() {
     }
   ];
 
+  // Verifikasi struktur awal index.html dan berita.html menggunakan animasi skeleton (tanpa berita lama)
+  const initialIndexContent = fs.readFileSync(path.join(ROOT_DIR, 'index.html'), 'utf8');
+  assert(initialIndexContent.includes('news-card-skeleton'),
+    'Beranda: Menggunakan animasi loading skeleton pada daftar berita bawaan');
+  assert(!initialIndexContent.includes('Kemah Santri Pramuka Terpadu Sako Maarif NU Jawa Barat Tahun 2026...'),
+    'Beranda: Teks berita lama bawaan web berhasil dihapus');
+
+  const initialBeritaContent = fs.readFileSync(path.join(ROOT_DIR, 'berita.html'), 'utf8');
+  assert(initialBeritaContent.includes('news-card-skeleton'),
+    'Berita: Menggunakan animasi loading skeleton pada halaman berita bawaan');
+  assert(!initialBeritaContent.includes('Semangat kepanduan, nilai keislaman, dan kebersamaan akan berpadu'),
+    'Berita: Teks berita lama bawaan web berhasil dihapus');
+
   const beritaEnv = createDOMForPage('berita.html', {
     sako_data_berita: testBeritaList
   });

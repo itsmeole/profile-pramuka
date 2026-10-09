@@ -61,54 +61,42 @@
       <div class="container">
 
         <!-- Featured article -->
-        <div style="margin-bottom:32px;" class="reveal">
-          <article class="news-card featured" style="max-width:100%;">
-            <div class="news-card-img" style="aspect-ratio:21/8;">
-              <img src="assets/images/kemah1.png" alt="Kemah Santri Pramuka Terpadu" onerror="this.parentElement.classList.add('img-fallback')" />
-              <span class="news-category">Kemah</span>
-            </div>
-            <div class="news-card-body">
-              <div class="news-meta">
-                <span class="news-author">SAKOMA</span>
-                <span class="news-date">24 September 2026</span>
-              </div>
-              <h2 class="news-title" style="font-size:22px;">
-                <a href="artikel-kemah-santri.html">Kemah Santri Pramuka Terpadu Sako Maarif NU Jawa Barat 2026</a>
-              </h2>
-              <p class="news-excerpt" style="-webkit-line-clamp:4;">
-                Kemah Santri Pramuka Terpadu Sako Maarif NU Jawa Barat: Satukan Langkah, Perkuat Karakter, Tumbuhkan Generasi Berdaya. Semangat kepanduan, nilai keislaman, dan kebersamaan akan berpadu dalam kegiatan Kemah Santri Pramuka Terpadu Sako Maarif NU Jawa Barat Tahun 2026.
-              </p>
-              <a href="artikel-kemah-santri.html" class="btn btn-green" style="margin-top:12px;width:fit-content;">Baca Selengkapnya</a>
+        <div style="margin-bottom:32px;" class="reveal" id="featuredNewsContainer">
+          <article class="news-card news-card-skeleton featured" style="max-width:100%;" aria-hidden="true">
+            <div class="skeleton skeleton-img" style="aspect-ratio:21/8;"></div>
+            <div class="skeleton-body">
+              <div class="skeleton skeleton-meta"></div>
+              <div class="skeleton skeleton-title-1" style="height:24px;"></div>
+              <div class="skeleton skeleton-title-2" style="height:24px;"></div>
+              <div class="skeleton skeleton-excerpt-1"></div>
+              <div class="skeleton skeleton-excerpt-2"></div>
+              <div class="skeleton skeleton-btn" style="width:140px;height:36px;border-radius:var(--radius-sm);margin-top:12px;"></div>
             </div>
           </article>
         </div>
 
         <!-- Grid berita -->
         <div class="berita-grid" id="berita-grid">
-          <article class="news-card reveal reveal-delay-1">
-            <div class="news-card-img">
-              <img src="assets/images/kemah2.png" alt="KMD SAKO" onerror="this.parentElement.classList.add('img-fallback')" />
-              <span class="news-category">Pelatihan</span>
-            </div>
-            <div class="news-card-body">
-              <div class="news-meta">
-                <span class="news-author">SAKOMA</span>
-                <span class="news-date">24 September 2026</span>
-              </div>
-              <h3 class="news-title">
-                <a href="artikel-kmd.html">KMD SAKO – Kursus Mahir Dasar Pramuka 2026</a>
-              </h3>
-              <p class="news-excerpt">Kursus Mahir Dasar (KMD) Pramuka Sako Pandu Maarif NU Jawa Barat. Tingkatkan Kompetensi, Bangun Karakter, Siapkan Pembina Hebat!</p>
-              <a href="artikel-kmd.html" class="news-readmore">Baca Selengkapnya &rarr;</a>
+          <article class="news-card news-card-skeleton" aria-hidden="true">
+            <div class="skeleton skeleton-img"></div>
+            <div class="skeleton-body">
+              <div class="skeleton skeleton-meta"></div>
+              <div class="skeleton skeleton-title-1"></div>
+              <div class="skeleton skeleton-title-2"></div>
+              <div class="skeleton skeleton-excerpt-1"></div>
+              <div class="skeleton skeleton-excerpt-2"></div>
+              <div class="skeleton skeleton-btn"></div>
             </div>
           </article>
-
-          <!-- Placeholder berita berikutnya -->
-          <article class="news-card reveal reveal-delay-2" style="border-style:dashed;background:var(--bg-subtle);display:flex;align-items:center;justify-content:center;min-height:300px;">
-            <div style="text-align:center;padding:32px;">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-faint);margin:0 auto 16px;display:block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              <p style="font-size:14px;font-weight:600;color:var(--text-muted);">Berita selanjutnya segera hadir</p>
-              <p style="font-size:13px;color:var(--text-faint);margin-top:6px;">Pantau terus informasi terkini</p>
+          <article class="news-card news-card-skeleton" aria-hidden="true">
+            <div class="skeleton skeleton-img"></div>
+            <div class="skeleton-body">
+              <div class="skeleton skeleton-meta"></div>
+              <div class="skeleton skeleton-title-1"></div>
+              <div class="skeleton skeleton-title-2"></div>
+              <div class="skeleton skeleton-excerpt-1"></div>
+              <div class="skeleton skeleton-excerpt-2"></div>
+              <div class="skeleton skeleton-btn"></div>
             </div>
           </article>
         </div>

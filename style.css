@@ -1199,6 +1199,104 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .berita-section { padding: 60px 0 96px; }
 
 /* =============================================
+   SKELETON LOADING ANIMATION
+   ============================================= */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 25%,
+    rgba(0, 0, 0, 0.12) 37%,
+    rgba(0, 0, 0, 0.06) 63%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  border-radius: var(--radius-xs);
+  display: block;
+}
+
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.14) 37%,
+    rgba(255, 255, 255, 0.05) 63%
+  );
+  background-size: 200% 100%;
+}
+
+.news-card-skeleton {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+  min-height: 380px;
+}
+
+.news-card-skeleton .skeleton-img {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 0;
+}
+
+.news-card-skeleton.featured .skeleton-img {
+  aspect-ratio: 21/9;
+}
+
+.news-card-skeleton .skeleton-body {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.news-card-skeleton .skeleton-meta {
+  width: 35%;
+  height: 12px;
+  margin-bottom: 2px;
+}
+
+.news-card-skeleton .skeleton-title-1 {
+  width: 92%;
+  height: 20px;
+}
+
+.news-card-skeleton .skeleton-title-2 {
+  width: 65%;
+  height: 20px;
+}
+
+.news-card-skeleton .skeleton-excerpt-1 {
+  width: 100%;
+  height: 14px;
+  margin-top: 4px;
+}
+
+.news-card-skeleton .skeleton-excerpt-2 {
+  width: 80%;
+  height: 14px;
+}
+
+.news-card-skeleton .skeleton-btn {
+  width: 130px;
+  height: 18px;
+  margin-top: auto;
+  border-radius: var(--radius-xs);
+}
+
+/* =============================================
    GALLERY PREVIEW
    ============================================= */
 .gallery-preview-section {
