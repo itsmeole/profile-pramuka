@@ -587,6 +587,31 @@ async function runTests() {
   });
 
   // --------------------------------------------------------------------------
+  // TEST SUITE 9: FAVICON VERIFICATION (assets/images/logo.png)
+  // --------------------------------------------------------------------------
+  console.log('\n--- TEST SUITE 9: FAVICON VERIFICATION ---');
+
+  const pagesForFavicon = [
+    'index.html',
+    'profil.html',
+    'kepengurusan.html',
+    'berita.html',
+    'galeri.html',
+    'artikel-kmd.html',
+    'artikel-kemah-santri.html'
+  ];
+
+  pagesForFavicon.forEach(page => {
+    const content = fs.readFileSync(path.join(ROOT_DIR, page), 'utf8');
+    assert(content.includes('href="assets/images/logo.png"') && content.includes('rel="icon"'),
+      `Favicon: ${page} memasang assets/images/logo.png sebagai favicon tab browser`);
+  });
+
+  const adminContent = fs.readFileSync(path.join(ROOT_DIR, 'riki', 'index.html'), 'utf8');
+  assert(adminContent.includes('href="../assets/images/logo.png"') && adminContent.includes('rel="icon"'),
+    'Favicon: riki/index.html memasang logo.png sebagai favicon tab browser');
+
+  // --------------------------------------------------------------------------
   // SUMMARY
   // --------------------------------------------------------------------------
   console.log('\n================================================================');
