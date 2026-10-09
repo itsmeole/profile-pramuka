@@ -1296,6 +1296,53 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   border-radius: var(--radius-xs);
 }
 
+/* Gallery Skeleton Loading */
+.galeri-item-skeleton {
+  position: relative;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  pointer-events: none;
+}
+
+.galeri-item-skeleton .skeleton-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+.galeri-item-skeleton .skeleton-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 64px;
+  height: 22px;
+  border-radius: 20px;
+  z-index: 2;
+}
+
+.galeri-item-skeleton .skeleton-overlay-bottom {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 2;
+}
+
+.galeri-item-skeleton .skeleton-title {
+  width: 75%;
+  height: 14px;
+}
+
+.galeri-item-skeleton .skeleton-subtitle {
+  width: 40%;
+  height: 10px;
+}
+
 /* =============================================
    GALLERY PREVIEW
    ============================================= */
@@ -1421,6 +1468,25 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 
 .galeri-item:hover .galeri-item-overlay { opacity: 1; }
+
+.galeri-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  background: rgba(37, 99, 37, 0.92);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 
 /* Lightbox */
 .lightbox {

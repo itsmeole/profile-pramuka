@@ -856,17 +856,6 @@
         const galleryPreviewGrid = document.querySelector('.gallery-preview-grid');
         const newsItems = await window.SakoDB.getBerita();
 
-        const basePhotos = [
-          { image: 'assets/images/kemah1.png', title: 'Kemah Santri Pramuka Terpadu Jawa Barat', category: 'kemah' },
-          { image: 'assets/images/kemah2.png', title: 'Kursus Mahir Dasar (KMD) Pembina Pramuka', category: 'pelatihan' },
-          { image: 'assets/images/kemah3.png', title: 'Upacara Pembukaan & Apel Akbar Pramuka SAKO', category: 'upacara' },
-          { image: 'assets/images/kemah4.png', title: 'Latihan Keterampilan Lapangan & Pionering', category: 'kemah' },
-          { image: 'assets/images/kemah2.png', title: 'Pendidikan Karakter & Kepanduan Ma\'arif NU', category: 'pelatihan' },
-          { image: 'assets/images/kemah1.png', title: 'Dokumentasi Kebersamaan Pramuka Santri', category: 'kemah' },
-          { image: 'assets/images/kemah3.png', title: 'Giat Prestasi & Persaudaraan Pandu Ma\'arif', category: 'upacara' },
-          { image: 'assets/images/kemah4.png', title: 'Malam Api Unggun & Renungan Pandu NU', category: 'kemah' }
-        ];
-
         const newsPhotos = [];
         if (newsItems && newsItems.length) {
           newsItems.forEach(item => {
@@ -886,42 +875,43 @@
           });
         }
 
-        const fullGallery = [...newsPhotos, ...basePhotos];
-
         if (galeriGrid) {
           galeriGrid.innerHTML = '';
-          fullGallery.forEach((photo, idx) => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = `galeri-item reveal reveal-delay-${(idx % 3) + 1}`;
-            itemDiv.setAttribute('data-category', photo.category || 'kemah');
-
-            const badgeTag = photo.isFromNews ? `
-              <span style="position: absolute; top: 12px; left: 12px; z-index: 2; background: rgba(37,99,37,0.92); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; backdrop-filter: blur(4px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.5px;">
-                ${photo.categoryName}
-              </span>
-            ` : '';
-
-            itemDiv.innerHTML = `
-              ${badgeTag}
-              <img src="${photo.image}" alt="${photo.title}" loading="lazy" onerror="this.parentElement.style.background='var(--green-100)'" />
-              <div class="galeri-item-overlay">
-                <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
-                  <span style="font-size: 13.5px; font-weight: 700; color: #fff; line-height: 1.35;">${photo.title}</span>
-                  <span style="font-size: 11.5px; color: var(--gold-light); font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
-                    <span>Lihat Foto &rarr;</span>
-                    ${photo.date ? `<small style="color: rgba(255,255,255,0.7); font-weight: 400;">${photo.date}</small>` : ''}
-                  </span>
-                </div>
+          if (newsPhotos.length === 0) {
+            galeriGrid.innerHTML = `
+              <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                <p style="font-size: 16px; margin-bottom: 8px; font-weight: 600;">Belum ada dokumentasi galeri kegiatan dari berita.</p>
+                <p style="font-size: 13.5px;">Tambahkan berita yang memuat foto melalui Dashboard Admin untuk menampilkan galeri kegiatan.</p>
               </div>
             `;
-            galeriGrid.appendChild(itemDiv);
-          });
-          initScrollReveal();
+          } else {
+            newsPhotos.forEach((photo, idx) => {
+              const itemDiv = document.createElement('div');
+              itemDiv.className = `galeri-item reveal reveal-delay-${(idx % 3) + 1}`;
+              itemDiv.setAttribute('data-category', photo.category || 'kemah');
+
+              itemDiv.innerHTML = `
+                <span class="galeri-badge">${photo.categoryName}</span>
+                <img src="${photo.image}" alt="${photo.title}" loading="lazy" onerror="this.parentElement.style.background='var(--green-100)'" />
+                <div class="galeri-item-overlay">
+                  <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
+                    <span style="font-size: 13.5px; font-weight: 700; color: #fff; line-height: 1.35;">${photo.title}</span>
+                    <span style="font-size: 11.5px; color: var(--gold-light); font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+                      <span>Lihat Foto &rarr;</span>
+                      ${photo.date ? `<small style="color: rgba(255,255,255,0.7); font-weight: 400;">${photo.date}</small>` : ''}
+                    </span>
+                  </div>
+                </div>
+              `;
+              galeriGrid.appendChild(itemDiv);
+            });
+            initScrollReveal();
+          }
         }
 
         if (galleryPreviewGrid) {
           galleryPreviewGrid.innerHTML = '';
-          const previewPhotos = fullGallery.slice(0, 3);
+          const previewPhotos = newsPhotos.slice(0, 3);
           previewPhotos.forEach((photo, idx) => {
             const a = document.createElement('a');
             a.href = 'galeri.html';
@@ -931,7 +921,7 @@
               <div class="gallery-overlay">
                 <div style="text-align: center; padding: 0 12px;">
                   <span style="display: block; font-weight: 700; font-size: 13.5px; margin-bottom: 2px;">${photo.title}</span>
-                  <small style="font-size: 11px; opacity: 0.9; color: var(--gold-light);">Buka di Galeri →</small>
+                  <small style="font-size: 11px; opacity: 0.9; color: var(--gold-light);">Buka di Galeri &rarr;</small>
                 </div>
               </div>
             `;

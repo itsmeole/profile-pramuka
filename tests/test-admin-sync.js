@@ -488,6 +488,62 @@ async function runTests() {
     `Expected length 2, Got: ${JSON.stringify(updatedSlideTitles)}`);
 
   // --------------------------------------------------------------------------
+  // TEST SUITE 7: GALERI DOKUMENTASI & SKELETON (galeri.html)
+  // --------------------------------------------------------------------------
+  console.log('\n--- TEST SUITE 7: GALERI DOKUMENTASI & SKELETON (galeri.html) ---');
+
+  const rawGaleriHtml = fs.readFileSync(path.join(ROOT_DIR, 'galeri.html'), 'utf8');
+  assert(rawGaleriHtml.includes('galeri-item-skeleton'),
+    'Galeri: Menggunakan animasi loading skeleton pada halaman galeri bawaan');
+
+  assert(!rawGaleriHtml.includes('Kegiatan Pramuka 1') && !rawGaleriHtml.includes('Kegiatan Pramuka 9'),
+    'Galeri: Foto statis lama bawaan tanpa badge berhasil dihapus dari galeri');
+
+  const galeriEnv = createDOMForPage('galeri.html', {
+    sako_data_berita: testBeritaList
+  });
+
+  galeriEnv.window.eval(mainJsCode);
+  await new Promise(r => setTimeout(r, 200));
+
+  const docGaleri = galeriEnv.document;
+  const renderedItems = docGaleri.querySelectorAll('#galeri-grid .galeri-item');
+  const renderedBadges = docGaleri.querySelectorAll('#galeri-grid .galeri-badge');
+
+  assert(renderedItems.length === 2,
+    'Galeri: Hanya foto berita yang memiliki badge kategori yang ditampilkan di galeri',
+    `Expected: 2, Got: ${renderedItems.length}`);
+
+  assert(renderedBadges.length === renderedItems.length && renderedBadges.length > 0,
+    'Galeri: Seluruh item foto di galeri memiliki badge kategori berita yang sesuai',
+    `Expected badges: ${renderedItems.length}, Got: ${renderedBadges.length}`);
+
+  // --------------------------------------------------------------------------
+  // TEST SUITE 8: FOOTER CONTACT EMAIL SYNCHRONIZATION
+  // --------------------------------------------------------------------------
+  console.log('\n--- TEST SUITE 8: FOOTER CONTACT EMAIL SYNCHRONIZATION ---');
+
+  const targetEmail = 'sakomaarifnujabar@gmail.com';
+  const oldEmail = 'sakomaarifnu.jabar@gmail.com';
+  const pagesToCheck = [
+    'index.html',
+    'profil.html',
+    'kepengurusan.html',
+    'berita.html',
+    'galeri.html',
+    'artikel-kmd.html',
+    'artikel-kemah-santri.html'
+  ];
+
+  pagesToCheck.forEach(page => {
+    const content = fs.readFileSync(path.join(ROOT_DIR, page), 'utf8');
+    assert(content.includes(targetEmail),
+      `Footer Email: ${page} mencantumkan email resmi ${targetEmail}`);
+    assert(!content.includes(oldEmail),
+      `Footer Email: ${page} tidak lagi mencantumkan email lama ${oldEmail}`);
+  });
+
+  // --------------------------------------------------------------------------
   // SUMMARY
   // --------------------------------------------------------------------------
   console.log('\n================================================================');
