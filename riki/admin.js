@@ -1144,12 +1144,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const reader = new FileReader();
       reader.onload = async (event) => {
+        let imported;
         try {
-          const imported = JSON.parse(event.target.result);
-          if (!imported || typeof imported !== 'object') {
-            throw new Error('Format file JSON tidak valid.');
-          }
+          const rawText = String(event.target.result || '').trim().replace(/^\uFEFF/, '');
+          imported = JSON.parse(rawText);
+        } catch (jsonErr) {
+          console.error('JSON parse error:', jsonErr);
+          showToast('File JSON tidak valid atau struktur teks rusak.', 'error');
+          e.target.value = '';
+          return;
+        }
 
+        if (!imported || typeof imported !== 'object') {
+          showToast('Isi file cadangan tidak valid.', 'error');
+          e.target.value = '';
+          return;
+        }
+
+        try {
           if (imported.tentang) await window.SakoDB.saveTentang(imported.tentang);
           if (imported.visimisi) await window.SakoDB.saveVisiMisi(imported.visimisi);
           if (imported.kepengurusan) await window.SakoDB.saveKepengurusan(imported.kepengurusan);
@@ -1157,15 +1169,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           if (Array.isArray(imported.berita)) {
             for (const item of imported.berita) {
-              await window.SakoDB.saveBerita(item);
+              if (window.SakoDB.saveBeritaItem) {
+                await window.SakoDB.saveBeritaItem(item);
+              } else if (window.SakoDB.saveBerita) {
+                await window.SakoDB.saveBerita(item);
+              }
             }
           }
 
-          showToast('Data berhasil dipulihkan & disinkronkan!', 'success');
-          setTimeout(() => window.location.reload(), 1000);
-        } catch (err) {
-          console.error('Gagal mengimpor data:', err);
-          showToast('Format file tidak valid. Pastikan memilih file hasil Ekspor Cadangan Data (.json).', 'error');
+          // Sinkronkan langsung ke database server MySQL jika API aktif
+          if (typeof window.SakoDB.syncAllToCloud === 'function') {
+            await window.SakoDB.syncAllToCloud();
+          }
+
+          showToast('Data berhasil dipulihkan & disinkronkan ke database!', 'success');
+          setTimeout(() => window.location.reload(), 1200);
+        } catch (syncErr) {
+          console.error('Gagal memproses data cadangan:', syncErr);
+          showToast('Gagal memproses data: ' + syncErr.message, 'error');
         } finally {
           e.target.value = '';
         }

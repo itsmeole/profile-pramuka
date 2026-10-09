@@ -541,6 +541,10 @@
       return list.find(item => item.id === id || item.slug === id);
     }
 
+    async saveBerita(item) {
+      return this.saveBeritaItem(item);
+    }
+
     async saveBeritaItem(item) {
       const list = await this.getBerita();
       const existingIdx = list.findIndex(b => b.id === item.id);
