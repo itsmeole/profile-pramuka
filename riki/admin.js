@@ -1130,6 +1130,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
 
+      const fileName = (file.name || '').toLowerCase();
+      if (fileName.endsWith('.sql')) {
+        showToast('File ini adalah file SQL. Untuk file database.sql, silakan impor melalui menu phpMyAdmin di cPanel. Tombol ini khusus file cadangan .json.', 'error');
+        e.target.value = '';
+        return;
+      }
+      if (fileName.endsWith('.zip')) {
+        showToast('File ini berformat ZIP. Tombol ini khusus untuk file cadangan .json.', 'error');
+        e.target.value = '';
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = async (event) => {
         try {
@@ -1153,7 +1165,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           setTimeout(() => window.location.reload(), 1000);
         } catch (err) {
           console.error('Gagal mengimpor data:', err);
-          showToast('Format file cadangan tidak valid atau rusak.', 'error');
+          showToast('Format file tidak valid. Pastikan memilih file hasil Ekspor Cadangan Data (.json).', 'error');
         } finally {
           e.target.value = '';
         }
