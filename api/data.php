@@ -122,7 +122,7 @@ if ($method === 'POST') {
 
         $id = $item['id'];
         $title = $item['title'] ?? 'Tanpa Judul';
-        $slug = $item['slug'] ?? ($id . '.html');
+        $slug = $item['slug'] ?? $id;
         $category = $item['category'] ?? 'Berita';
         $author = $item['author'] ?? 'SAKOMA';
         $date = !empty($item['date']) ? $item['date'] : date('Y-m-d');
@@ -171,7 +171,7 @@ if ($method === 'POST') {
                 $stmt->execute([
                     $item['id'],
                     $item['title'] ?? '',
-                    $item['slug'] ?? ($item['id'] . '.html'),
+                    $item['slug'] ?? $item['id'],
                     $item['category'] ?? 'Berita',
                     $item['author'] ?? 'SAKOMA',
                     $item['date'] ?? date('Y-m-d'),

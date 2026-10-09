@@ -36,7 +36,8 @@ function assert(condition, testName, details = '') {
 }
 
 function createDOMForPage(htmlFileName, initialLocalStorage = {}) {
-  const htmlContent = fs.readFileSync(path.join(ROOT_DIR, htmlFileName), 'utf8');
+  const baseFile = htmlFileName.split('?')[0];
+  const htmlContent = fs.readFileSync(path.join(ROOT_DIR, baseFile), 'utf8');
   const virtualConsole = new (require('jsdom').VirtualConsole)();
   // Filter out resource load error warnings for missing external CSS/scripts in node test
   virtualConsole.on('error', () => {});
@@ -246,6 +247,14 @@ async function runTests() {
   assert(tujuanText.includes('Terbentuknya 1000 gugus depan terakreditasi.') && tujuanText.includes('Sertifikasi pembina mahir berstandar nasional.'),
     'Profil: Butir-butir Tujuan diperbarui di web profile');
 
+  // Verifikasi Angka Statistik di Profil
+  const profilStatTahun = docProfil.getElementById('stat-tahun-profil')?.textContent?.trim();
+  const profilStatBidang = docProfil.getElementById('stat-bidang-profil')?.textContent?.trim();
+  const profilStatPengurus = docProfil.getElementById('stat-pengurus-profil')?.textContent?.trim();
+  assert(profilStatTahun === '2027', 'Profil: Stat Tahun diperbarui di Profil', `Expected: 2027, Got: ${profilStatTahun}`);
+  assert(profilStatBidang === '10', 'Profil: Stat Bidang diperbarui di Profil', `Expected: 10, Got: ${profilStatBidang}`);
+  assert(profilStatPengurus === '120+', 'Profil: Stat Pengurus diperbarui di Profil', `Expected: 120+, Got: ${profilStatPengurus}`);
+
   // --------------------------------------------------------------------------
   // TEST SUITE 3: BERANDA / HOME STATS & PILLARS (index.html)
   // --------------------------------------------------------------------------
@@ -335,6 +344,27 @@ async function runTests() {
   const indexNewsText = docIndexNews.querySelector('.news-grid')?.textContent || '';
   assert(indexNewsText.includes(testBeritaList[0].title),
     'Beranda: Berita terbaru dari admin muncul di preview berita Beranda');
+
+  const newsReadMoreHref = docIndexNews.querySelector('.news-card .news-readmore')?.getAttribute('href') || '';
+  assert(newsReadMoreHref.startsWith('artikel-kmd.html?id='),
+    'Beranda: Link berita admin mengarah ke artikel-kmd.html dengan parameter ID yang valid',
+    `Got: "${newsReadMoreHref}"`);
+
+  // Verifikasi artikel dinamis dapat dibuka dan di-hydrate di halaman artikel-kmd.html
+  const articlePageEnv = createDOMForPage('artikel-kmd.html?id=rapat-kerja-daerah-2026', {
+    sako_data_berita: testBeritaList
+  });
+  articlePageEnv.window.eval(mainJsCode);
+  await new Promise(r => setTimeout(r, 200));
+
+  const docArticle = articlePageEnv.document;
+  const hydratedTitle = docArticle.getElementById('articleMainTitle')?.textContent?.trim();
+  const hydratedContent = docArticle.getElementById('articleBodyContent')?.textContent || '';
+  assert(hydratedTitle === testBeritaList[0].title,
+    'Artikel: Berita admin berhasil dibuka dan judul ter-hydrate di halaman artikel',
+    `Expected: "${testBeritaList[0].title}", Got: "${hydratedTitle}"`);
+  assert(hydratedContent.includes('Isi lengkap dokumentasi hasil keputusan rakerda'),
+    'Artikel: Isi konten artikel berita admin berhasil di-render di halaman artikel');
 
   // --------------------------------------------------------------------------
   // TEST SUITE 5: REAL-TIME STORAGE EVENT SYNC (TANPA REFRESH)

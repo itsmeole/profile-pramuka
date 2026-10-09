@@ -579,7 +579,7 @@
           const cloudPayload = {
             id: item.id,
             title: item.title,
-            slug: item.slug || (item.id + '.html'),
+            slug: item.slug || item.id,
             category: item.category || 'Berita',
             author: item.author || 'SAKOMA',
             date: item.date || new Date().toISOString().split('T')[0],
@@ -845,7 +845,7 @@
             const cloudPayload = {
               id: item.id,
               title: item.title,
-              slug: item.slug || (item.id + '.html'),
+              slug: item.slug || item.id,
               category: item.category || 'Berita',
               author: item.author || 'SAKOMA',
               date: item.date || new Date().toISOString().split('T')[0],

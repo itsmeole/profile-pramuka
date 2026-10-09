@@ -172,38 +172,70 @@
   }
 
   /* --- Counter Animation (Stats) --- */
-  const statNums = document.querySelectorAll('.stat-num');
-  if (statNums.length && 'IntersectionObserver' in window) {
-    const counterObs = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          animateCounter(entry.target);
-          counterObs.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.5 });
+  const activeCounterRFA = new WeakMap();
 
-    statNums.forEach(el => counterObs.observe(el));
-  }
+  function animateCounter(el, forcedTarget) {
+    if (!el) return;
+    const rawVal = forcedTarget !== undefined ? String(forcedTarget) : (el.getAttribute('data-target') || el.textContent || '').trim();
+    if (!rawVal) return;
 
-  function animateCounter(el) {
-    const text = el.textContent;
-    const suffix = text.replace(/[0-9]/g, '');
-    const target = parseInt(text.replace(/\D/g, ''), 10);
-    if (isNaN(target)) return;
+    if (activeCounterRFA.has(el)) {
+      cancelAnimationFrame(activeCounterRFA.get(el));
+      activeCounterRFA.delete(el);
+    }
 
-    const duration = 1200;
+    const suffix = rawVal.replace(/[0-9]/g, '');
+    const num = parseInt(rawVal.replace(/\D/g, ''), 10);
+    if (isNaN(num)) {
+      el.textContent = rawVal;
+      return;
+    }
+
+    const duration = 1000;
     const start = performance.now();
 
     function update(now) {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      el.textContent = Math.round(eased * target) + suffix;
-      if (progress < 1) requestAnimationFrame(update);
+      el.textContent = Math.round(eased * num) + suffix;
+      if (progress < 1) {
+        const id = requestAnimationFrame(update);
+        activeCounterRFA.set(el, id);
+      } else {
+        el.textContent = rawVal;
+        activeCounterRFA.delete(el);
+      }
     }
 
-    requestAnimationFrame(update);
+    const id = requestAnimationFrame(update);
+    activeCounterRFA.set(el, id);
+  }
+
+  function setStatValue(el, val) {
+    if (!el || val === undefined || val === null) return;
+    const strVal = String(val).trim();
+    if (!strVal) return;
+    el.setAttribute('data-target', strVal);
+    el.textContent = strVal;
+    if (typeof window.requestAnimationFrame === 'function' && typeof window.IntersectionObserver === 'function') {
+      animateCounter(el, strVal);
+    }
+  }
+
+  const statNums = document.querySelectorAll('.stat-num');
+  if (statNums.length && 'IntersectionObserver' in window) {
+    const counterObs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const targetVal = entry.target.getAttribute('data-target') || entry.target.textContent;
+          animateCounter(entry.target, targetVal);
+          counterObs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    statNums.forEach(el => counterObs.observe(el));
   }
 
   /* --- Gallery filter --- */
@@ -241,10 +273,11 @@
 
   function getArticleUrl(item) {
     if (!item) return 'berita.html';
-    if (item.slug && item.slug.endsWith('.html')) return item.slug;
-    if (item.id === 'kemah-santri-2026') return 'artikel-kemah-santri.html';
-    if (item.id === 'kmd-sako-2026') return 'artikel-kmd.html';
-    return `artikel-kmd.html?id=${encodeURIComponent(item.id)}`;
+    const id = String(item.id || '');
+    const slug = String(item.slug || '');
+    if (id === 'kemah-santri-2026' || slug === 'artikel-kemah-santri.html') return 'artikel-kemah-santri.html';
+    if (id === 'kmd-sako-2026' || slug === 'artikel-kmd.html') return 'artikel-kmd.html';
+    return `artikel-kmd.html?id=${encodeURIComponent(id || slug)}`;
   }
 
   function renderPersonList(container, names) {
@@ -407,17 +440,23 @@
       goToSlide(heroCurrentSlide - 1);
     }
 
-    const intervalTime = Math.max(2500, Number(slideshowCfg.interval) || 5000);
+    const intervalTime = Math.max(1000, Number(slideshowCfg.interval) || 5000);
     const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function startTimer() {
       if (slides.length <= 1 || prefersReducedMotion || heroSlideshowPaused) return;
-      if (heroSlideshowTimer) clearInterval(heroSlideshowTimer);
+      if (heroSlideshowTimer) {
+        clearInterval(heroSlideshowTimer);
+        heroSlideshowTimer = null;
+      }
       heroSlideshowTimer = setInterval(nextSlide, intervalTime);
     }
 
     function restartTimer() {
-      if (heroSlideshowTimer) clearInterval(heroSlideshowTimer);
+      if (heroSlideshowTimer) {
+        clearInterval(heroSlideshowTimer);
+        heroSlideshowTimer = null;
+      }
       startTimer();
     }
 
@@ -459,18 +498,6 @@
 
     const heroSection = document.querySelector('.hero-banner-section') || container;
     if (heroSection) {
-      heroSection.onmouseenter = () => {
-        if (!heroSlideshowPaused && heroSlideshowTimer) {
-          clearInterval(heroSlideshowTimer);
-        }
-      };
-
-      heroSection.onmouseleave = () => {
-        if (!heroSlideshowPaused && !prefersReducedMotion) {
-          startTimer();
-        }
-      };
-
       heroSection.onkeydown = (e) => {
         if (e.key === 'ArrowLeft') {
           prevSlide();
@@ -601,19 +628,30 @@
         }
       }
 
-      // 3. INDEX / BERANDA (STATS, PILARS, NEWS PREVIEW)
+      // 3. STATS HYDRATION (BERANDA & PROFIL)
+      const hasStatsElements = !!document.getElementById('stat-tahun') || !!document.getElementById('stat-tahun-profil');
+      if (hasStatsElements || isIndex || isProfil) {
+        const tentangData = await window.SakoDB.getTentang();
+        if (tentangData && tentangData.stats) {
+          if (tentangData.stats.tahun) {
+            setStatValue(document.getElementById('stat-tahun'), tentangData.stats.tahun);
+            setStatValue(document.getElementById('stat-tahun-profil'), tentangData.stats.tahun);
+          }
+          if (tentangData.stats.bidang) {
+            setStatValue(document.getElementById('stat-bidang'), tentangData.stats.bidang);
+            setStatValue(document.getElementById('stat-bidang-profil'), tentangData.stats.bidang);
+          }
+          if (tentangData.stats.pengurus) {
+            setStatValue(document.getElementById('stat-pengurus'), tentangData.stats.pengurus);
+            setStatValue(document.getElementById('stat-pengurus-profil'), tentangData.stats.pengurus);
+          }
+        }
+      }
+
+      // 4. INDEX / BERANDA (PILARS & SLIDESHOW)
       if (isIndex) {
         const tentangData = await window.SakoDB.getTentang();
         if (tentangData) {
-          // Dynamic Hero Stats
-          if (tentangData.stats) {
-            const statTahun = document.getElementById('stat-tahun');
-            const statBidang = document.getElementById('stat-bidang');
-            const statPengurus = document.getElementById('stat-pengurus');
-            if (statTahun && tentangData.stats.tahun) statTahun.textContent = tentangData.stats.tahun;
-            if (statBidang && tentangData.stats.bidang) statBidang.textContent = tentangData.stats.bidang;
-            if (statPengurus && tentangData.stats.pengurus) statPengurus.textContent = tentangData.stats.pengurus;
-          }
 
           // Pillars
           const aboutGrid = document.querySelector('.about-grid');
@@ -730,7 +768,10 @@
         const activeId = reqId || (path.includes('kemah') ? 'kemah-santri-2026' : 'kmd-sako-2026');
 
         const articleList = await window.SakoDB.getBerita();
-        const article = articleList?.find(b => b.id === activeId || (b.slug && path.includes(b.slug)));
+        const article = articleList?.find(b =>
+          String(b.id) === String(activeId) ||
+          (b.slug && (path.includes(b.slug) || String(b.slug) === String(activeId)))
+        );
 
         if (article) {
           if (reqId) {
