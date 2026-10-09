@@ -15,7 +15,7 @@
   <!-- Supabase CDN Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Data Manager Layer -->
-  <script src="../assets/js/data-manager.js"></script>
+  <script src="../assets/js/data-manager.js?v=2.2"></script>
   <link rel="stylesheet" href="admin.css" />
 </head>
 <body>
@@ -673,13 +673,25 @@
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
               <button type="button" class="btn-primary" id="exportDataBtn">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                <span>Ekspor Cadangan Data (.json)</span>
+                <span>Ekspor Cadangan (.json)</span>
               </button>
               <label class="btn-outline" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 0;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                <span>Impor Data Cadangan</span>
+                <span>Pilih File .json</span>
                 <input type="file" id="importDataInput" accept=".json" style="display: none;" />
               </label>
+              <button type="button" class="btn-outline" id="togglePasteJsonBtn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                <span>Tempel Teks JSON</span>
+              </button>
+            </div>
+
+            <div id="pasteJsonContainer" style="display: none; margin-top: 14px; border-top: 1px dashed var(--admin-border); padding-top: 14px;">
+              <label class="form-label" style="font-size: 12px; margin-bottom: 6px;">Buka file .json di Notepad, lalu salin dan tempel isinya di sini:</label>
+              <textarea id="pasteJsonTextarea" class="form-textarea" rows="4" placeholder="{ &quot;tentang&quot;: ... }"></textarea>
+              <button type="button" class="btn-primary" id="applyPasteJsonBtn" style="margin-top: 10px;">
+                <span>Terapkan &amp; Pulihkan Data</span>
+              </button>
             </div>
           </div>
         </section>
@@ -722,6 +734,6 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- Admin Application Logic -->
-  <script src="admin.js"></script>
+  <script src="admin.js?v=2.2"></script>
 </body>
 </html>

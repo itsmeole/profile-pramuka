@@ -1124,6 +1124,81 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  async function processImportedJson(rawInput) {
+    let imported;
+    try {
+      let rawText = String(rawInput || '').trim().replace(/^\uFEFF/, '');
+      imported = JSON.parse(rawText);
+      if (typeof imported === 'string') {
+        imported = JSON.parse(imported);
+      }
+    } catch (jsonErr) {
+      console.error('JSON parse error:', jsonErr);
+      showToast('Format JSON tidak valid: ' + jsonErr.message, 'error');
+      return false;
+    }
+
+    if (!imported || typeof imported !== 'object') {
+      showToast('Isi file cadangan tidak valid (bukan objek JSON).', 'error');
+      return false;
+    }
+
+    // Toleransi format payload cadangan
+    const payloadData = {
+      tentang: imported.tentang || imported.sako_data_tentang,
+      visimisi: imported.visimisi || imported.sako_data_visimisi,
+      kepengurusan: imported.kepengurusan || imported.sako_data_kepengurusan,
+      heroSlideshow: imported.heroSlideshow || imported.hero_slideshow || imported.sako_hero_slideshow,
+      berita: imported.berita || imported.sako_data_berita || (Array.isArray(imported) ? imported : null)
+    };
+
+    let successCount = 0;
+    try {
+      if (payloadData.tentang) {
+        try { await window.SakoDB.saveTentang(payloadData.tentang); successCount++; } catch (err) { console.warn('Gagal simpan tentang:', err); }
+      }
+      if (payloadData.visimisi) {
+        try { await window.SakoDB.saveVisiMisi(payloadData.visimisi); successCount++; } catch (err) { console.warn('Gagal simpan visimisi:', err); }
+      }
+      if (payloadData.kepengurusan) {
+        try { await window.SakoDB.saveKepengurusan(payloadData.kepengurusan); successCount++; } catch (err) { console.warn('Gagal simpan kepengurusan:', err); }
+      }
+      if (payloadData.heroSlideshow) {
+        try { await window.SakoDB.saveHeroSlideshow(payloadData.heroSlideshow); successCount++; } catch (err) { console.warn('Gagal simpan slideshow:', err); }
+      }
+      if (Array.isArray(payloadData.berita)) {
+        for (const item of payloadData.berita) {
+          try {
+            if (window.SakoDB.saveBeritaItem) {
+              await window.SakoDB.saveBeritaItem(item);
+            } else if (window.SakoDB.saveBerita) {
+              await window.SakoDB.saveBerita(item);
+            }
+            successCount++;
+          } catch (err) { console.warn('Gagal simpan item berita:', err); }
+        }
+      }
+
+      // Sinkronkan langsung ke database server MySQL jika API aktif
+      if (typeof window.SakoDB.syncAllToCloud === 'function') {
+        try { await window.SakoDB.syncAllToCloud(); } catch (err) { console.warn('Sync cloud warning:', err); }
+      }
+
+      if (successCount > 0) {
+        showToast('Data berhasil dipulihkan (' + successCount + ' komponen) & disinkronkan!', 'success');
+        setTimeout(() => window.location.reload(), 1200);
+        return true;
+      } else {
+        showToast('Tidak ada komponen data yang cocok di dalam file/teks JSON ini.', 'error');
+        return false;
+      }
+    } catch (syncErr) {
+      console.error('Gagal memproses data cadangan:', syncErr);
+      showToast('Gagal memproses data: ' + syncErr.message, 'error');
+      return false;
+    }
+  }
+
   const importInput = document.getElementById('importDataInput');
   if (importInput) {
     importInput.addEventListener('change', async (e) => {
@@ -1132,66 +1207,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const fileName = (file.name || '').toLowerCase();
       if (fileName.endsWith('.sql')) {
-        showToast('File ini adalah file SQL. Untuk file database.sql, silakan impor melalui menu phpMyAdmin di cPanel. Tombol ini khusus file cadangan .json.', 'error');
+        showToast('File ini adalah file SQL. Untuk file database.sql, silakan impor melalui menu phpMyAdmin di cPanel.', 'error');
         e.target.value = '';
         return;
       }
       if (fileName.endsWith('.zip')) {
-        showToast('File ini berformat ZIP. Tombol ini khusus untuk file cadangan .json.', 'error');
+        showToast('File ini berformat ZIP. Pilih file cadangan .json.', 'error');
         e.target.value = '';
         return;
       }
 
       const reader = new FileReader();
       reader.onload = async (event) => {
-        let imported;
-        try {
-          const rawText = String(event.target.result || '').trim().replace(/^\uFEFF/, '');
-          imported = JSON.parse(rawText);
-        } catch (jsonErr) {
-          console.error('JSON parse error:', jsonErr);
-          showToast('File JSON tidak valid atau struktur teks rusak.', 'error');
-          e.target.value = '';
-          return;
-        }
-
-        if (!imported || typeof imported !== 'object') {
-          showToast('Isi file cadangan tidak valid.', 'error');
-          e.target.value = '';
-          return;
-        }
-
-        try {
-          if (imported.tentang) await window.SakoDB.saveTentang(imported.tentang);
-          if (imported.visimisi) await window.SakoDB.saveVisiMisi(imported.visimisi);
-          if (imported.kepengurusan) await window.SakoDB.saveKepengurusan(imported.kepengurusan);
-          if (imported.heroSlideshow) await window.SakoDB.saveHeroSlideshow(imported.heroSlideshow);
-
-          if (Array.isArray(imported.berita)) {
-            for (const item of imported.berita) {
-              if (window.SakoDB.saveBeritaItem) {
-                await window.SakoDB.saveBeritaItem(item);
-              } else if (window.SakoDB.saveBerita) {
-                await window.SakoDB.saveBerita(item);
-              }
-            }
-          }
-
-          // Sinkronkan langsung ke database server MySQL jika API aktif
-          if (typeof window.SakoDB.syncAllToCloud === 'function') {
-            await window.SakoDB.syncAllToCloud();
-          }
-
-          showToast('Data berhasil dipulihkan & disinkronkan ke database!', 'success');
-          setTimeout(() => window.location.reload(), 1200);
-        } catch (syncErr) {
-          console.error('Gagal memproses data cadangan:', syncErr);
-          showToast('Gagal memproses data: ' + syncErr.message, 'error');
-        } finally {
-          e.target.value = '';
-        }
+        await processImportedJson(event.target.result);
+        e.target.value = '';
       };
       reader.readAsText(file);
+    });
+  }
+
+  const togglePasteBtn = document.getElementById('togglePasteJsonBtn');
+  const pasteContainer = document.getElementById('pasteJsonContainer');
+  if (togglePasteBtn && pasteContainer) {
+    togglePasteBtn.addEventListener('click', () => {
+      pasteContainer.style.display = pasteContainer.style.display === 'none' ? 'block' : 'none';
+      if (pasteContainer.style.display === 'block') {
+        document.getElementById('pasteJsonTextarea')?.focus();
+      }
+    });
+  }
+
+  const applyPasteBtn = document.getElementById('applyPasteJsonBtn');
+  if (applyPasteBtn) {
+    applyPasteBtn.addEventListener('click', async () => {
+      const textarea = document.getElementById('pasteJsonTextarea');
+      const val = textarea ? textarea.value.trim() : '';
+      if (!val) {
+        showToast('Silakan tempel teks JSON terlebih dahulu.', 'error');
+        return;
+      }
+      await processImportedJson(val);
     });
   }
 
