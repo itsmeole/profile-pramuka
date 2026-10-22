@@ -524,8 +524,16 @@
           const res = await fetch(this.apiEndpoint + '?action=get_news&_t=' + Date.now(), { cache: 'no-store' });
           if (res.ok) {
             const json = await res.json();
-            if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-              const activeList = json.data.filter(item => !deletedIds.includes(String(item.id)));
+            if (json.success && Array.isArray(json.data)) {
+              // Sinkronkan deletedIds lokal agar tidak menimpa berita aktif di database MySQL
+              if (deletedIds.length > 0) {
+                const currentDbIds = new Set(json.data.map(item => String(item.id)));
+                const remainingDeleted = deletedIds.filter(dId => !currentDbIds.has(dId));
+                if (remainingDeleted.length !== deletedIds.length) {
+                  localStorage.setItem('sako_deleted_news_ids', JSON.stringify(remainingDeleted));
+                }
+              }
+              const activeList = json.data;
               const normalized = activeList.map(item => ({
                 ...item,
                 dateFormatted: item.dateformatted || item.dateFormatted || item.date

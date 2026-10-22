@@ -885,16 +885,15 @@
             `;
           }
 
-          const otherNews = beritaList.filter(b => b.id !== featuredItem?.id);
           const gridEl = document.getElementById('berita-grid') || document.querySelector('.berita-grid');
           const beritaWrapper = document.getElementById('beritaPaginationWrapper');
           const beritaInfo = document.getElementById('beritaPaginationInfo');
           const beritaPagination = document.getElementById('beritaPagination');
 
           if (gridEl) {
-            if (otherNews.length) {
+            if (beritaList.length) {
               setupNewsPagination({
-                items: otherNews,
+                items: beritaList, // Seluruh berita aktif (7 berita) masuk ke pagination agar tidak ada yang tersembunyi
                 gridEl: gridEl,
                 wrapperEl: beritaWrapper,
                 infoEl: beritaInfo,
@@ -997,6 +996,74 @@
               ${rawParagraphs.map(p => `<p>${p.replace(/\n/g, '<br/>')}</p>`).join('')}
             `;
           }
+
+          // Matikan status skeleton loading dan tampilkan konten artikel
+          document.documentElement.classList.remove('article-loading-state');
+          const skeletonEl = document.getElementById('articleSkeleton');
+          const actualEl = document.getElementById('articleActual');
+          if (skeletonEl) skeletonEl.style.display = 'none';
+          if (actualEl) actualEl.style.display = 'block';
+
+          // 1) Rekomendasi Artikel Terkait (3 - 5 opsi berita)
+          const relatedContainer = document.getElementById('sidebarRelatedNews');
+          if (relatedContainer && articleList && articleList.length) {
+            const otherArticles = articleList.filter(b =>
+              String(b.id) !== String(article.id) &&
+              String(b.slug) !== String(article.id)
+            );
+            const recommended = otherArticles.slice(0, 4); // Rekomendasi 4 berita
+            if (recommended.length) {
+              relatedContainer.innerHTML = recommended.map(item => `
+                <a href="${getArticleUrl(item)}" class="sidebar-post">
+                  <img
+                    class="sidebar-post-img"
+                    src="${item.image || 'assets/images/kemah1.png'}"
+                    alt="${item.title}"
+                    onerror="this.src='assets/images/kemah1.png'"
+                  />
+                  <div>
+                    <p class="sidebar-post-title">${item.title}</p>
+                    <p class="sidebar-post-date">${item.dateFormatted || item.date || ''}</p>
+                  </div>
+                </a>
+              `).join('');
+            }
+          }
+
+          // 2) Foto Galeri Kegiatan Terkini di Sidebar Artikel
+          const sidebarGallery = document.getElementById('sidebarGalleryGrid');
+          if (sidebarGallery && articleList && articleList.length) {
+            const photos = [];
+            articleList.forEach(b => {
+              if (b.image && !photos.includes(b.image)) photos.push(b.image);
+            });
+            const fallbackPhotos = [
+              'assets/images/kemah1.png',
+              'assets/images/kemah2.png',
+              'assets/images/kemah3.png',
+              'assets/images/kemah4.png'
+            ];
+            fallbackPhotos.forEach(p => { if (!photos.includes(p)) photos.push(p); });
+
+            const displayPhotos = photos.slice(0, 4);
+            sidebarGallery.innerHTML = displayPhotos.map((imgSrc, i) => `
+              <a href="galeri.html" style="display:block;border-radius:8px;overflow:hidden;height:70px;">
+                <img
+                  src="${imgSrc}"
+                  style="width:100%;height:100%;object-fit:cover;transition:transform 0.3s;"
+                  alt="Foto kegiatan ${i+1}"
+                  onmouseover="this.style.transform='scale(1.08)'"
+                  onmouseout="this.style.transform='scale(1)'"
+                />
+              </a>
+            `).join('');
+          }
+        } else {
+          document.documentElement.classList.remove('article-loading-state');
+          const skeletonEl = document.getElementById('articleSkeleton');
+          const actualEl = document.getElementById('articleActual');
+          if (skeletonEl) skeletonEl.style.display = 'none';
+          if (actualEl) actualEl.style.display = 'block';
         }
       }
 

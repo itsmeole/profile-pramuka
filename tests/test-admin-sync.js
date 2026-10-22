@@ -676,6 +676,82 @@ async function runTests() {
     'Open Graph: api/image.php mengompres gambar ke format JPEG ramah WhatsApp (< 300 KB)');
 
   // --------------------------------------------------------------------------
+  // TEST SUITE 11: 7 BERITA PAGINATION, SKELETON LOADING & SIDEBAR WIDGETS
+  // --------------------------------------------------------------------------
+  console.log('\n--- TEST SUITE 11: 7 BERITA, SKELETON LOADING & SIDEBAR WIDGETS ---');
+
+  // Test 1: 7 berita pagination
+  const sampleSevenNews = [
+    { id: 1, title: 'Berita 1', category: 'Umum', date: '2026-09-01', excerpt: 'Ringkasan 1', content: 'Konten 1' },
+    { id: 2, title: 'Berita 2', category: 'Umum', date: '2026-09-02', excerpt: 'Ringkasan 2', content: 'Konten 2' },
+    { id: 3, title: 'Berita 3', category: 'Umum', date: '2026-09-03', excerpt: 'Ringkasan 3', content: 'Konten 3' },
+    { id: 4, title: 'Berita 4', category: 'Umum', date: '2026-09-04', excerpt: 'Ringkasan 4', content: 'Konten 4' },
+    { id: 5, title: 'Berita 5', category: 'Umum', date: '2026-09-05', excerpt: 'Ringkasan 5', content: 'Konten 5' },
+    { id: 6, title: 'Berita 6', category: 'Umum', date: '2026-09-06', excerpt: 'Ringkasan 6', content: 'Konten 6' },
+    { id: 7, title: 'Berita 7', category: 'Umum', date: '2026-09-07', excerpt: 'Ringkasan 7', content: 'Konten 7' }
+  ];
+
+  const { dom: bDom, window: bWin } = createDOMForPage('berita.html', {
+    sako_data_berita: sampleSevenNews
+  });
+  bWin.eval(mainJsCode);
+  await new Promise(r => setTimeout(r, 200));
+
+  const newsCardsPage1 = bWin.document.querySelectorAll('#berita-grid .news-card');
+  assert(newsCardsPage1.length === 6,
+    `Pagination Berita: Halaman 1 menampilkan tepat 6 berita dari total 7 (ditemukan: ${newsCardsPage1.length})`);
+
+  const paginationWrapper = bWin.document.getElementById('beritaPaginationWrapper');
+  assert(paginationWrapper && paginationWrapper.style.display !== 'none',
+    'Pagination Berita: Pagination wrapper aktif ketika ada 7 berita');
+
+  const paginationContainer = bWin.document.getElementById('beritaPagination');
+  const sevenNewsPageButtons = paginationContainer ? paginationContainer.querySelectorAll('.page-btn') : [];
+  assert(sevenNewsPageButtons.length >= 2,
+    `Pagination Berita: Tombol pagination memiliki setidaknya 2 halaman untuk 7 berita (ditemukan: ${sevenNewsPageButtons.length})`);
+
+  // Test 2: Skeleton loading markup & script in HTML
+  ['artikel-kmd.html', 'artikel-kemah-santri.html'].forEach(page => {
+    const pageContent = fs.readFileSync(path.join(ROOT_DIR, page), 'utf8');
+    assert(pageContent.includes('id="articleSkeleton"'),
+      `Skeleton Loading: ${page} memiliki elemen #articleSkeleton`);
+    assert(pageContent.includes('id="articleActual"'),
+      `Skeleton Loading: ${page} membungkus konten aktual di dalam #articleActual`);
+    assert(pageContent.includes('article-loading-state'),
+      `Skeleton Loading: ${page} memiliki script sinkron di head untuk mengaktifkan class article-loading-state`);
+    assert(pageContent.includes('id="sidebarRelatedNews"'),
+      `Sidebar Widget: ${page} memiliki container #sidebarRelatedNews`);
+    assert(pageContent.includes('href="berita.html"') && pageContent.includes('Lihat Berita Lainnya'),
+      `Sidebar Widget: ${page} memiliki tombol text ke tab berita (berita.html)`);
+    assert(pageContent.includes('id="sidebarGalleryGrid"'),
+      `Sidebar Widget: ${page} memiliki container #sidebarGalleryGrid`);
+    assert(pageContent.includes('href="galeri.html"') && pageContent.includes('Buka Tab Galeri Selengkapnya'),
+      `Sidebar Widget: ${page} memiliki tombol text ke tab galeri (galeri.html)`);
+  });
+
+  // Test 3: Skeleton CSS styles
+  const cssContent = fs.readFileSync(path.join(ROOT_DIR, 'style.css'), 'utf8');
+  assert(cssContent.includes('.article-skeleton-wrapper') && cssContent.includes('article-loading-state'),
+    'Skeleton CSS: style.css memiliki rule animasi dan transisi skeleton article-loading-state');
+  assert(cssContent.includes('.sidebar-more-link'),
+    'Sidebar CSS: style.css memiliki styling tombol tautan .sidebar-more-link');
+
+  // Test 4: Hydration and Related News Sidebar in main.js
+  const { window: artWin } = createDOMForPage('artikel-kmd.html?id=3', {
+    sako_data_berita: sampleSevenNews
+  });
+  artWin.eval(mainJsCode);
+  await new Promise(r => setTimeout(r, 200));
+
+  const relatedItems = artWin.document.querySelectorAll('#sidebarRelatedNews .sidebar-post');
+  assert(relatedItems.length >= 3 && relatedItems.length <= 5,
+    `Sidebar Rekomendasi: Menampilkan rekomendasi 3-5 artikel terkait (ditemukan: ${relatedItems.length})`);
+
+  const currentTitle = artWin.document.getElementById('articleMainTitle');
+  assert(currentTitle && currentTitle.textContent.includes('Berita 3'),
+    'Hydration Artikel: Judul artikel dinamis terisi sesuai parameter id=3');
+
+  // --------------------------------------------------------------------------
   // SUMMARY
   // --------------------------------------------------------------------------
   console.log('\n================================================================');

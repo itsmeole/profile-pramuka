@@ -30,7 +30,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <script>(function(){var t=localStorage.getItem('sako-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+  <script>
+    (function(){
+      var t=localStorage.getItem('sako-theme')||'light';
+      document.documentElement.setAttribute('data-theme',t);
+      if (new URLSearchParams(window.location.search).get('id')) {
+        document.documentElement.classList.add('article-loading-state');
+      }
+    })();
+  </script>
 </head>
 <body>
   <a class="skip-link" href="#main">Lewati navigasi</a>
@@ -89,97 +97,120 @@
 
           <!-- MAIN ARTICLE -->
           <article class="article-main">
-            <div class="article-cover">
-              <img
-                id="articleCoverImg"
-                src="assets/images/kemah2.png"
-                alt="KMD SAKO 2026"
-                onerror="this.parentElement.style.background='var(--bg-subtle)'; this.style.display='none'"
-              />
+            <!-- SKELETON LOADING PLACEHOLDER (Aktif otomatis saat data sedang dimuat) -->
+            <div id="articleSkeleton" class="article-skeleton-wrapper" style="display:none;" aria-hidden="true">
+              <div class="skeleton" style="width:100%;aspect-ratio:16/9;border-radius:var(--radius-md);margin-bottom:24px;"></div>
+              <div style="display:flex;gap:12px;margin-bottom:16px;">
+                <div class="skeleton" style="width:90px;height:24px;border-radius:var(--radius-xs);"></div>
+                <div class="skeleton" style="width:100px;height:24px;border-radius:var(--radius-xs);"></div>
+                <div class="skeleton" style="width:130px;height:24px;border-radius:var(--radius-xs);"></div>
+              </div>
+              <div class="skeleton" style="width:92%;height:32px;border-radius:6px;margin-bottom:12px;"></div>
+              <div class="skeleton" style="width:65%;height:32px;border-radius:6px;margin-bottom:28px;"></div>
+              <div class="skeleton" style="width:100%;height:70px;border-radius:var(--radius-sm);margin-bottom:24px;"></div>
+              <div class="skeleton" style="width:100%;height:16px;border-radius:4px;margin-bottom:10px;"></div>
+              <div class="skeleton" style="width:96%;height:16px;border-radius:4px;margin-bottom:10px;"></div>
+              <div class="skeleton" style="width:94%;height:16px;border-radius:4px;margin-bottom:10px;"></div>
+              <div class="skeleton" style="width:86%;height:16px;border-radius:4px;margin-bottom:24px;"></div>
+              <div class="skeleton" style="width:100%;height:16px;border-radius:4px;margin-bottom:10px;"></div>
+              <div class="skeleton" style="width:92%;height:16px;border-radius:4px;margin-bottom:10px;"></div>
+              <div class="skeleton" style="width:88%;height:16px;border-radius:4px;margin-bottom:24px;"></div>
             </div>
-            <div class="article-body">
-              <div class="article-meta">
-                <span class="article-cat" id="articleCatLabel">Pelatihan</span>
-                <span class="article-author">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  <span id="articleAuthorLabel">SAKOMA</span>
-                </span>
-                <span class="article-date">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                  <span id="articleDateLabel">24 September 2026</span>
-                </span>
+
+            <!-- ACTUAL ARTICLE CONTENT -->
+            <div id="articleActual">
+              <div class="article-cover">
+                <img
+                  id="articleCoverImg"
+                  src="assets/images/kemah2.png"
+                  alt="KMD SAKO 2026"
+                  onerror="this.parentElement.style.background='var(--bg-subtle)'; this.style.display='none'"
+                />
               </div>
-
-              <h1 class="article-title" id="articleMainTitle">
-                Kursus Mahir Dasar (KMD) Pramuka Sako Pandu Ma'arif NU Jawa Barat 2026
-              </h1>
-
-              <div class="article-content" id="articleBodyContent">
-                <div class="highlight-box">
-                  <strong>Tingkatkan Kompetensi, Bangun Karakter, Siapkan Pembina Hebat!</strong> Program resmi berstandar nasional untuk mencetak pendidik kepanduan yang unggul dan berakar pada nilai-nilai Islam Ahlussunnah wal Jama'ah.
+              <div class="article-body">
+                <div class="article-meta">
+                  <span class="article-cat" id="articleCatLabel">Pelatihan</span>
+                  <span class="article-author">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <span id="articleAuthorLabel">SAKOMA</span>
+                  </span>
+                  <span class="article-date">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span id="articleDateLabel">24 September 2026</span>
+                  </span>
                 </div>
 
-                <p>
-                  Kursus Mahir Dasar (KMD) merupakan jenjang pendidikan dan pelatihan fundamental bagi calon Pembina Pramuka untuk memperoleh Surat Hak Bina (SHB) tingkat dasar. Program ini dirancang sistematis guna mempersiapkan para calon Pembina Pramuka yang berdaya saing, berkarakter luhur, dan profesional di seluruh gugus depan lembaga pendidikan Ma'arif NU se-Jawa Barat.
-                </p>
+                <h1 class="article-title" id="articleMainTitle">
+                  Kursus Mahir Dasar (KMD) Pramuka Sako Pandu Ma'arif NU Jawa Barat 2026
+                </h1>
 
-                <p>
-                  Sako Pandu Ma'arif NU Jawa Barat menyelenggarakan Kursus Mahir Dasar (KMD) Pramuka Tahun 2026 sebagai perwujudan komitmen berkelanjutan dalam meningkatkan mutu dan dedikasi pembina pramuka di satuan pendidikan madrasah, pesantren, dan sekolah Nahdlatul Ulama.
-                </p>
+                <div class="article-content" id="articleBodyContent">
+                  <div class="highlight-box">
+                    <strong>Tingkatkan Kompetensi, Bangun Karakter, Siapkan Pembina Hebat!</strong> Program resmi berstandar nasional untuk mencetak pendidik kepanduan yang unggul dan berakar pada nilai-nilai Islam Ahlussunnah wal Jama'ah.
+                  </div>
 
-                <h2>Tujuan Kegiatan</h2>
-                <ul>
-                  <li>Meningkatkan kompetensi pedagogik dan teknis calon Pembina Pramuka</li>
-                  <li>Membekali peserta dengan metodologi kepramukaan modern yang relevan dengan perkembangan zaman</li>
-                  <li>Membentuk karakter pendidik kepanduan yang berintegritas dan berakhlakul karimah</li>
-                  <li>Menyiapkan kaderisasi pembina aktif di seluruh tingkatan gugus depan Ma'arif NU</li>
-                  <li>Mengintegrasikan nilai-nilai Aswaja An-Nahdliyah ke dalam aktivitas kepramukaan praktis</li>
-                </ul>
+                  <p>
+                    Kursus Mahir Dasar (KMD) merupakan jenjang pendidikan dan pelatihan fundamental bagi calon Pembina Pramuka untuk memperoleh Surat Hak Bina (SHB) tingkat dasar. Program ini dirancang sistematis guna mempersiapkan para calon Pembina Pramuka yang berdaya saing, berkarakter luhur, dan profesional di seluruh gugus depan lembaga pendidikan Ma'arif NU se-Jawa Barat.
+                  </p>
 
-                <h2>Kurikulum &amp; Materi Pelatihan</h2>
-                <p>Peserta KMD menerima pembekalan komprehensif yang mencakup ranah teoritis dan aplikatif:</p>
-                <ul>
-                  <li><strong>Kepramukaan Dasar</strong> – Sejarah, kode kehormatan, AD/ART, dan prinsip dasar metodik pendidikan kepramukaan</li>
-                  <li><strong>Metode Pembinaan Peserta Didik</strong> – Pendekatan psikologi pembinaan Siaga, Penggalang, dan Penegak</li>
-                  <li><strong>Keterampilan Kepanduan Lapangan</strong> – Manajemen perkemahan, tali-temali, pionering, navigasi darat, dan P3K</li>
-                  <li><strong>Tata Kelola Administrasi Gudep</strong> – Pengorganisasian pangkalan dan pelaporan administrasi satuan</li>
-                  <li><strong>Eksplorasi Alam Terbuka</strong> – Praktek navigasi, kepedulian lingkungan hidup, dan survival dasar</li>
-                  <li><strong>Integrasi Nilai Aswaja</strong> – Landasan moderasi beragama, amaliah NU, dan wawasan kebangsaan</li>
-                </ul>
+                  <p>
+                    Sako Pandu Ma'arif NU Jawa Barat menyelenggarakan Kursus Mahir Dasar (KMD) Pramuka Tahun 2026 sebagai perwujudan komitmen berkelanjutan dalam meningkatkan mutu dan dedikasi pembina pramuka di satuan pendidikan madrasah, pesantren, dan sekolah Nahdlatul Ulama.
+                  </p>
 
-                <div class="info-box">
-                  <strong>Informasi Pendaftaran:</strong><br/>
-                  Pendaftaran KMD Pramuka 2026 dibuka secara kolektif melalui koordinator wilayah atau sekretariat Sako Pandu Ma'arif NU Jawa Barat. Kuota peserta dibatasi demi menjaga rasio pembimbingan pelatihan yang intensif.
+                  <h2>Tujuan Kegiatan</h2>
+                  <ul>
+                    <li>Meningkatkan kompetensi pedagogik dan teknis calon Pembina Pramuka</li>
+                    <li>Membekali peserta dengan metodologi kepramukaan modern yang relevan dengan perkembangan zaman</li>
+                    <li>Membentuk karakter pendidik kepanduan yang berintegritas dan berakhlakul karimah</li>
+                    <li>Menyiapkan kaderisasi pembina aktif di seluruh tingkatan gugus depan Ma'arif NU</li>
+                    <li>Mengintegrasikan nilai-nilai Aswaja An-Nahdliyah ke dalam aktivitas kepramukaan praktis</li>
+                  </ul>
+
+                  <h2>Kurikulum &amp; Materi Pelatihan</h2>
+                  <p>Peserta KMD menerima pembekalan komprehensif yang mencakup ranah teoritis dan aplikatif:</p>
+                  <ul>
+                    <li><strong>Kepramukaan Dasar</strong> – Sejarah, kode kehormatan, AD/ART, dan prinsip dasar metodik pendidikan kepramukaan</li>
+                    <li><strong>Metode Pembinaan Peserta Didik</strong> – Pendekatan psikologi pembinaan Siaga, Penggalang, dan Penegak</li>
+                    <li><strong>Keterampilan Kepanduan Lapangan</strong> – Manajemen perkemahan, tali-temali, pionering, navigasi darat, dan P3K</li>
+                    <li><strong>Tata Kelola Administrasi Gudep</strong> – Pengorganisasian pangkalan dan pelaporan administrasi satuan</li>
+                    <li><strong>Eksplorasi Alam Terbuka</strong> – Praktek navigasi, kepedulian lingkungan hidup, dan survival dasar</li>
+                    <li><strong>Integrasi Nilai Aswaja</strong> – Landasan moderasi beragama, amaliah NU, dan wawasan kebangsaan</li>
+                  </ul>
+
+                  <div class="info-box">
+                    <strong>Informasi Pendaftaran:</strong><br/>
+                    Pendaftaran KMD Pramuka 2026 dibuka secara kolektif melalui koordinator wilayah atau sekretariat Sako Pandu Ma'arif NU Jawa Barat. Kuota peserta dibatasi demi menjaga rasio pembimbingan pelatihan yang intensif.
+                  </div>
+
+                  <h2>Fasilitas &amp; Hak Peserta</h2>
+                  <ul>
+                    <li>Ijazah resmi Kursus Mahir Dasar berstandar Kwartir Nasional Gerakan Pramuka</li>
+                    <li>Modul pelatihan, silabus kurikulum, dan buku saku panduan pembina</li>
+                    <li>Konsumsi penuh dan layanan kesehatan selama kegiatan berlangsung</li>
+                    <li>Akomodasi perkemahan terstandar</li>
+                    <li>Kelengkapan atribut pelatihan, badge peserta, dan syal kursus</li>
+                    <li>Jaringan pembina pramuka Maarif se-Jawa Barat</li>
+                  </ul>
+
+                  <p>
+                    Mari bersama mencetak generasi muda berakhlak mulia, berwawasan luas, dan cinta tanah air melalui gerakan kepanduan yang solid dan berkarakter di Sako Pandu Ma'arif NU Jawa Barat.
+                  </p>
+
+                  <div class="highlight-box">
+                    <strong>Sekretariat Panitia KMD:</strong><br/>
+                    Layanan informasi dan konfirmasi: <strong>085863680911</strong><br/>
+                    Sako Pandu Ma'arif NU Jawa Barat
+                  </div>
                 </div>
 
-                <h2>Fasilitas &amp; Hak Peserta</h2>
-                <ul>
-                  <li>Ijazah resmi Kursus Mahir Dasar berstandar Kwartir Nasional Gerakan Pramuka</li>
-                  <li>Modul pelatihan, silabus kurikulum, dan buku saku panduan pembina</li>
-                  <li>Konsumsi penuh dan layanan kesehatan selama kegiatan berlangsung</li>
-                  <li>Akomodasi perkemahan terstandar</li>
-                  <li>Kelengkapan atribut pelatihan, badge peserta, dan syal kursus</li>
-                  <li>Jaringan pembina pramuka Maarif se-Jawa Barat</li>
-                </ul>
-
-                <p>
-                  Mari bersama mencetak generasi muda berakhlak mulia, berwawasan luas, dan cinta tanah air melalui gerakan kepanduan yang solid dan berkarakter di Sako Pandu Ma'arif NU Jawa Barat.
-                </p>
-
-                <div class="highlight-box">
-                  <strong>Sekretariat Panitia KMD:</strong><br/>
-                  Layanan informasi dan konfirmasi: <strong>085863680911</strong><br/>
-                  Sako Pandu Ma'arif NU Jawa Barat
+                <div class="article-tags">
+                  <span class="article-tag">#KMDPramuka</span>
+                  <span class="article-tag">#Pramuka</span>
+                  <span class="article-tag">#SakoMaarifNU</span>
+                  <span class="article-tag">#JawaBarat</span>
+                  <span class="article-tag">#PembinaPramuka</span>
+                  <span class="article-tag">#Pelatihan</span>
                 </div>
-              </div>
-
-              <div class="article-tags">
-                <span class="article-tag">#KMDPramuka</span>
-                <span class="article-tag">#Pramuka</span>
-                <span class="article-tag">#SakoMaarifNU</span>
-                <span class="article-tag">#JawaBarat</span>
-                <span class="article-tag">#PembinaPramuka</span>
-                <span class="article-tag">#Pelatihan</span>
               </div>
             </div>
           </article>
@@ -188,18 +219,23 @@
           <aside class="article-sidebar">
             <div class="sidebar-widget">
               <h3 class="sidebar-widget-title">Artikel Terkait</h3>
-              <a href="artikel-kemah-santri.html" class="sidebar-post">
-                <img
-                  class="sidebar-post-img"
-                  src="assets/images/kemah1.png"
-                  alt="Kemah Santri"
-                  onerror="this.style.background='var(--bg-subtle)'; this.src=''"
-                />
-                <div>
-                  <p class="sidebar-post-title">Kemah Santri Pramuka Terpadu 2026</p>
-                  <p class="sidebar-post-date">24 September 2026</p>
-                </div>
-              </a>
+              <div id="sidebarRelatedNews">
+                <a href="artikel-kemah-santri.html" class="sidebar-post">
+                  <img
+                    class="sidebar-post-img"
+                    src="assets/images/kemah1.png"
+                    alt="Kemah Santri"
+                    onerror="this.style.background='var(--bg-subtle)'; this.src='assets/images/kemah1.png'"
+                  />
+                  <div>
+                    <p class="sidebar-post-title">Kemah Santri Pramuka Terpadu 2026</p>
+                    <p class="sidebar-post-date">24 September 2026</p>
+                  </div>
+                </a>
+              </div>
+              <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border);">
+                <a href="berita.html" class="sidebar-more-link">Lihat Berita Lainnya &rarr;</a>
+              </div>
             </div>
 
             <div class="sidebar-widget">
@@ -212,13 +248,15 @@
 
             <div class="sidebar-widget">
               <h3 class="sidebar-widget-title">Galeri Kegiatan</h3>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-                <img src="assets/images/kemah2.png" style="border-radius:8px;width:100%;height:70px;object-fit:cover;" alt="Foto kegiatan" onerror="this.style.display='none'" />
-                <img src="assets/images/kemah1.png" style="border-radius:8px;width:100%;height:70px;object-fit:cover;" alt="Foto kegiatan" onerror="this.style.display='none'" />
-                <img src="assets/images/kemah3.png" style="border-radius:8px;width:100%;height:70px;object-fit:cover;" alt="Foto kegiatan" onerror="this.style.display='none'" />
-                <img src="assets/images/kemah4.png" style="border-radius:8px;width:100%;height:70px;object-fit:cover;" alt="Foto kegiatan" onerror="this.style.display='none'" />
+              <div id="sidebarGalleryGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+                <img src="assets/images/kemah2.png" style="border-radius:8px;width:100%;height:70px;object-fit:cover;" alt="Foto kegiatan 1" onerror="this.style.display='none'" />
+                <img src="assets/images/kemah1.png" style="border-radius:8px;width:100%;height:70px;object-fit:cover;" alt="Foto kegiatan 2" onerror="this.style.display='none'" />
+                <img src="assets/images/kemah3.png" style="border-radius:8px;width:100%;height:70px;object-fit:cover;" alt="Foto kegiatan 3" onerror="this.style.display='none'" />
+                <img src="assets/images/kemah4.png" style="border-radius:8px;width:100%;height:70px;object-fit:cover;" alt="Foto kegiatan 4" onerror="this.style.display='none'" />
               </div>
-              <a href="galeri.html" class="btn btn-outline" style="width:100%;justify-content:center;font-size:13px;">Lihat Semua Galeri</a>
+              <div style="padding-top: 8px; border-top: 1px solid var(--border);">
+                <a href="galeri.html" class="sidebar-more-link">Buka Tab Galeri Selengkapnya &rarr;</a>
+              </div>
             </div>
 
             <div class="sidebar-widget" style="background: var(--green-800); border-color: var(--green-700);">
