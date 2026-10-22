@@ -703,32 +703,161 @@
       const beritaList = await window.SakoDB.getBerita();
 
       if (beritaList && beritaList.length && newsGrid) {
+        function renderNewsCardElement(item, idx) {
+          const article = document.createElement('article');
+          article.className = `news-card reveal reveal-delay-${(idx % 4) + 1}`;
+          const targetUrl = getArticleUrl(item);
+          article.innerHTML = `
+            <div class="news-card-img">
+              <img src="${item.image || 'assets/images/kemah1.png'}" alt="${item.title}" onerror="this.parentElement.classList.add('img-fallback')" />
+              <span class="news-category">${item.category || 'Berita'}</span>
+            </div>
+            <div class="news-card-body">
+              <div class="news-meta">
+                <span class="news-author">${item.author || 'SAKOMA'}</span>
+                <span class="news-date">${item.dateFormatted || item.date || ''}</span>
+              </div>
+              <h3 class="news-title">
+                <a href="${targetUrl}">${item.title}</a>
+              </h3>
+              <p class="news-excerpt">${item.excerpt || ''}</p>
+              <a href="${targetUrl}" class="news-readmore">Baca Selengkapnya →</a>
+            </div>
+          `;
+          return article;
+        }
+
+        function setupNewsPagination({
+          items,
+          gridEl,
+          wrapperEl,
+          infoEl,
+          paginationEl,
+          itemsPerPage = 6,
+          scrollTargetId = null,
+          onPageChange = null
+        }) {
+          if (!gridEl) return;
+          const totalItems = items.length;
+          const totalPages = Math.ceil(totalItems / itemsPerPage);
+          let currentPage = 1;
+
+          function showPage(page, shouldScroll = false) {
+            currentPage = Math.max(1, Math.min(page, totalPages));
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = Math.min(start + itemsPerPage, totalItems);
+            const pageItems = items.slice(start, end);
+
+            gridEl.innerHTML = '';
+            pageItems.forEach((item, idx) => {
+              gridEl.appendChild(renderNewsCardElement(item, idx));
+            });
+
+            if (infoEl) {
+              infoEl.textContent = `Menampilkan ${start + 1}–${end} dari ${totalItems} berita`;
+            }
+
+            if (paginationEl) {
+              paginationEl.innerHTML = '';
+
+              // Tombol Sebelumnya
+              const prevBtn = document.createElement('button');
+              prevBtn.type = 'button';
+              prevBtn.className = 'page-btn prev-btn';
+              prevBtn.innerHTML = '&larr; Sebelumnya';
+              prevBtn.disabled = currentPage === 1;
+              prevBtn.setAttribute('aria-label', 'Halaman Sebelumnya');
+              prevBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage > 1) showPage(currentPage - 1, true);
+              });
+              paginationEl.appendChild(prevBtn);
+
+              // Tombol Halaman
+              for (let p = 1; p <= totalPages; p++) {
+                if (totalPages > 7) {
+                  if (p > 1 && p < currentPage - 1 && p === 2) {
+                    const el = document.createElement('span');
+                    el.className = 'page-ellipsis';
+                    el.textContent = '...';
+                    paginationEl.appendChild(el);
+                    continue;
+                  }
+                  if (p > currentPage + 1 && p < totalPages && p === totalPages - 1) {
+                    const el = document.createElement('span');
+                    el.className = 'page-ellipsis';
+                    el.textContent = '...';
+                    paginationEl.appendChild(el);
+                    continue;
+                  }
+                  if (p !== 1 && p !== totalPages && (p < currentPage - 1 || p > currentPage + 1)) {
+                    continue;
+                  }
+                }
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `page-btn ${p === currentPage ? 'active' : ''}`;
+                btn.textContent = String(p);
+                btn.setAttribute('aria-label', `Halaman ${p}`);
+                if (p === currentPage) btn.setAttribute('aria-current', 'page');
+                btn.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  if (p !== currentPage) showPage(p, true);
+                });
+                paginationEl.appendChild(btn);
+              }
+
+              // Tombol Selanjutnya
+              const nextBtn = document.createElement('button');
+              nextBtn.type = 'button';
+              nextBtn.className = 'page-btn next-btn';
+              nextBtn.innerHTML = 'Selanjutnya &rarr;';
+              nextBtn.disabled = currentPage === totalPages;
+              nextBtn.setAttribute('aria-label', 'Halaman Selanjutnya');
+              nextBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage < totalPages) showPage(currentPage + 1, true);
+              });
+              paginationEl.appendChild(nextBtn);
+            }
+
+            if (wrapperEl) {
+              wrapperEl.style.display = totalPages > 1 ? 'flex' : 'none';
+            }
+
+            if (typeof onPageChange === 'function') {
+              onPageChange(currentPage);
+            }
+
+            initScrollReveal();
+
+            if (shouldScroll && scrollTargetId) {
+              const target = document.getElementById(scrollTargetId);
+              if (target) {
+                const top = target.getBoundingClientRect().top + window.pageYOffset - 85;
+                window.scrollTo({ top, behavior: 'smooth' });
+              }
+            }
+          }
+
+          showPage(1, false);
+        }
+
         if (isIndex) {
-          newsGrid.innerHTML = '';
-          beritaList.slice(0, 4).forEach((item, idx) => {
-            const article = document.createElement('article');
-            article.className = `news-card reveal reveal-delay-${(idx % 4) + 1}`;
-            const targetUrl = getArticleUrl(item);
-            article.innerHTML = `
-              <div class="news-card-img">
-                <img src="${item.image || 'assets/images/kemah1.png'}" alt="${item.title}" onerror="this.parentElement.classList.add('img-fallback')" />
-                <span class="news-category">${item.category || 'Berita'}</span>
-              </div>
-              <div class="news-card-body">
-                <div class="news-meta">
-                  <span class="news-author">${item.author || 'SAKOMA'}</span>
-                  <span class="news-date">${item.dateFormatted || item.date || ''}</span>
-                </div>
-                <h3 class="news-title">
-                  <a href="${targetUrl}">${item.title}</a>
-                </h3>
-                <p class="news-excerpt">${item.excerpt || ''}</p>
-                <a href="${targetUrl}" class="news-readmore">Baca Selengkapnya →</a>
-              </div>
-            `;
-            newsGrid.appendChild(article);
+          const indexWrapper = document.getElementById('indexPaginationWrapper');
+          const indexInfo = document.getElementById('indexPaginationInfo');
+          const indexPagination = document.getElementById('indexPagination');
+
+          setupNewsPagination({
+            items: beritaList,
+            gridEl: newsGrid,
+            wrapperEl: indexWrapper,
+            infoEl: indexInfo,
+            paginationEl: indexPagination,
+            itemsPerPage: 4,
+            scrollTargetId: 'berita'
           });
-          initScrollReveal();
         } else if (isBerita) {
           const featuredContainer = document.getElementById('featuredNewsContainer') || document.querySelector('.berita-section .container > div:first-child');
           const featuredItem = beritaList.find(b => b.featured) || beritaList[0];
@@ -758,31 +887,25 @@
 
           const otherNews = beritaList.filter(b => b.id !== featuredItem?.id);
           const gridEl = document.getElementById('berita-grid') || document.querySelector('.berita-grid');
+          const beritaWrapper = document.getElementById('beritaPaginationWrapper');
+          const beritaInfo = document.getElementById('beritaPaginationInfo');
+          const beritaPagination = document.getElementById('beritaPagination');
+
           if (gridEl) {
-            gridEl.innerHTML = '';
             if (otherNews.length) {
-              otherNews.forEach((item, idx) => {
-                const article = document.createElement('article');
-                article.className = `news-card reveal reveal-delay-${(idx % 3) + 1}`;
-                const targetUrl = getArticleUrl(item);
-                article.innerHTML = `
-                  <div class="news-card-img">
-                    <img src="${item.image || 'assets/images/kemah2.png'}" alt="${item.title}" onerror="this.parentElement.classList.add('img-fallback')" />
-                    <span class="news-category">${item.category || 'Berita'}</span>
-                  </div>
-                  <div class="news-card-body">
-                    <div class="news-meta">
-                      <span class="news-author">${item.author || 'SAKOMA'}</span>
-                      <span class="news-date">${item.dateFormatted || item.date || ''}</span>
-                    </div>
-                    <h3 class="news-title">
-                      <a href="${targetUrl}">${item.title}</a>
-                    </h3>
-                    <p class="news-excerpt">${item.excerpt || ''}</p>
-                    <a href="${targetUrl}" class="news-readmore">Baca Selengkapnya →</a>
-                  </div>
-                `;
-                gridEl.appendChild(article);
+              setupNewsPagination({
+                items: otherNews,
+                gridEl: gridEl,
+                wrapperEl: beritaWrapper,
+                infoEl: beritaInfo,
+                paginationEl: beritaPagination,
+                itemsPerPage: 6,
+                scrollTargetId: 'berita-grid',
+                onPageChange: (page) => {
+                  if (featuredContainer) {
+                    featuredContainer.style.display = (page === 1) ? '' : 'none';
+                  }
+                }
               });
             } else {
               gridEl.innerHTML = `
@@ -793,8 +916,8 @@
                   </div>
                 </article>
               `;
+              if (beritaWrapper) beritaWrapper.style.display = 'none';
             }
-            initScrollReveal();
           }
         }
       }

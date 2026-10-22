@@ -421,6 +421,25 @@ async function runTests() {
     'Beranda: Menampilkan tepat 4 berita di bagian Kegiatan & Informasi',
     `Expected 4, got ${renderedCardsCount}`);
 
+  // Verifikasi pagination muncul pada Beranda jika berita > 4
+  const indexPaginationWrapper = docIndex4.getElementById('indexPaginationWrapper');
+  assert(indexPaginationWrapper && indexPaginationWrapper.style.display !== 'none',
+    'Beranda: Pagination aktif dan tampil ketika berita lebih dari batas per halaman');
+
+  const pageButtons = docIndex4.querySelectorAll('#indexPagination .page-btn');
+  assert(pageButtons.length >= 3, // Prev, Page 1, Page 2, Next
+    'Beranda: Memiliki tombol navigasi halaman (pagination)');
+
+  // Verifikasi klik tombol halaman 2 me-render berita berikutnya
+  const page2Btn = Array.from(pageButtons).find(btn => btn.textContent.trim() === '2');
+  if (page2Btn) {
+    page2Btn.click();
+    const p2Cards = docIndex4.querySelectorAll('.news-grid .news-card').length;
+    assert(p2Cards === 1,
+      'Beranda: Halaman 2 pagination menampilkan sisa berita ke-5 dengan sempurna',
+      `Expected 1, got ${p2Cards}`);
+  }
+
   const renderedGalleryCount = docIndex4.querySelectorAll('#gallery-preview-grid .gallery-preview-item').length;
   assert(renderedGalleryCount === 4,
     'Beranda: Menampilkan tepat 4 foto dokumentasi kegiatan di preview galeri tanpa area kosong',

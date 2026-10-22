@@ -194,7 +194,7 @@
       this.apiEndpoint = '/api/data.php';
       this.initLocalData();
       this.initSupabase();
-      this.detectNativeApi();
+      this.detectPromise = this.detectNativeApi();
     }
 
     initLocalData() {
@@ -515,9 +515,13 @@
     async getBerita() {
       const deletedIds = this.getDeletedNewsIds();
 
+      if (this.detectPromise) {
+        try { await this.detectPromise; } catch (e) {}
+      }
+
       if (this.isNativeApi) {
         try {
-          const res = await fetch(this.apiEndpoint + '?action=get_news');
+          const res = await fetch(this.apiEndpoint + '?action=get_news&_t=' + Date.now(), { cache: 'no-store' });
           if (res.ok) {
             const json = await res.json();
             if (json.success && Array.isArray(json.data) && json.data.length > 0) {
@@ -526,6 +530,12 @@
                 ...item,
                 dateFormatted: item.dateformatted || item.dateFormatted || item.date
               }));
+              // Urutkan berita terbaru selalu di atas
+              normalized.sort((a, b) => {
+                const tA = new Date(a.date || a.created_at || a.updated_at || 0).getTime();
+                const tB = new Date(b.date || b.created_at || b.updated_at || 0).getTime();
+                return tB - tA;
+              });
               localStorage.setItem(STORAGE_KEYS.BERITA, JSON.stringify(normalized));
               return normalized;
             }
@@ -547,6 +557,11 @@
               ...item,
               dateFormatted: item.dateformatted || item.dateFormatted || item.date
             }));
+            normalized.sort((a, b) => {
+              const tA = new Date(a.date || a.created_at || a.updated_at || 0).getTime();
+              const tB = new Date(b.date || b.created_at || b.updated_at || 0).getTime();
+              return tB - tA;
+            });
             localStorage.setItem(STORAGE_KEYS.BERITA, JSON.stringify(normalized));
             return normalized;
           }
@@ -558,7 +573,13 @@
       try {
         const raw = localStorage.getItem(STORAGE_KEYS.BERITA);
         const list = raw ? JSON.parse(raw) : DEFAULT_DATA.berita;
-        return list.filter(item => !deletedIds.includes(String(item.id)));
+        const filtered = list.filter(item => !deletedIds.includes(String(item.id)));
+        filtered.sort((a, b) => {
+          const tA = new Date(a.date || a.created_at || a.updated_at || 0).getTime();
+          const tB = new Date(b.date || b.created_at || b.updated_at || 0).getTime();
+          return tB - tA;
+        });
+        return filtered;
       } catch (e) {
         return DEFAULT_DATA.berita.filter(item => !deletedIds.includes(String(item.id)));
       }
