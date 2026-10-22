@@ -645,6 +645,16 @@ async function runTests() {
   const artikelPhpContent = fs.readFileSync(path.join(ROOT_DIR, 'artikel.php'), 'utf8');
   assert(artikelPhpContent.includes('api/image.php'),
     'Open Graph: artikel.php mengarahkan gambar Base64 ke api/image.php endpoint biner');
+  assert(artikelPhpContent.includes('og:image:width') && artikelPhpContent.includes('og:image:height'),
+    'Open Graph: artikel.php menyertakan tag dimensi 1200x630 untuk memicu WhatsApp Large Card preview');
+  assert(artikelPhpContent.includes('summary_large_image'),
+    'Open Graph: artikel.php menyertakan twitter:card summary_large_image');
+
+  const apiImageContent = fs.readFileSync(path.join(ROOT_DIR, 'api', 'image.php'), 'utf8');
+  assert(apiImageContent.includes('1200') && apiImageContent.includes('630'),
+    'Open Graph: api/image.php mengoptimalkan dan me-resample gambar ke dimensi 1200x630');
+  assert(apiImageContent.includes('imagejpeg'),
+    'Open Graph: api/image.php mengompres gambar ke format JPEG ramah WhatsApp (< 300 KB)');
 
   // --------------------------------------------------------------------------
   // SUMMARY

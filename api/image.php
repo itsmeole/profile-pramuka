@@ -3,9 +3,10 @@
  * Image Delivery Endpoint untuk Open Graph / WhatsApp Preview
  * SAKO Ma'arif NU Jawa Barat - Rumahweb Hosting
  *
- * Endpoint ini menjamin bot sosial media (WhatsApp, Facebook, Twitter, Telegram)
- * mendapatkan file gambar fisik/biner asli (bukan data Base64 mentah)
- * sehingga kartu pratinjau berita selalu memuat foto beritanya.
+ * Mengoptimalkan foto berita menjadi format Banner Landscape (1200x630 px, rasio 1.91:1)
+ * dengan kompresi JPEG < 250 KB agar WhatsApp, Facebook, dan Twitter selalu
+ * menampilkan kartu pratinjau besar (Large Image Card / Header Preview seperti Instagram),
+ * bukan thumbnail kecil di samping teks.
  */
 
 $id = isset($_GET['id']) ? trim($_GET['id']) : '';
@@ -18,11 +19,12 @@ if (!$id) {
 // Bersihkan nama ID agar aman untuk penamaan file cache
 $cleanId = preg_replace('/[^a-zA-Z0-9_-]/', '', $id);
 $cacheDir = __DIR__ . '/../uploads/cache/';
-$cacheFile = $cacheDir . $cleanId . '.jpg';
+$bannerFile = $cacheDir . $cleanId . '_banner.jpg';
+$forceRefresh = isset($_GET['refresh']) || isset($_GET['force']);
 
-// 1. Sajikan dari file cache fisik jika sudah ada (sangat cepat & hemat resource)
-if (file_exists($cacheFile) && filesize($cacheFile) > 0) {
-    serveFile($cacheFile, 'image/jpeg');
+// 1. Sajikan dari file cache banner jika sudah ada dan tidak dipaksa refresh
+if (!$forceRefresh && file_exists($bannerFile) && filesize($bannerFile) > 0) {
+    serveFile($bannerFile, 'image/jpeg');
     exit;
 }
 
@@ -44,52 +46,91 @@ if (!$article || empty($article['image'])) {
 }
 
 $rawImage = $article['image'];
+$binaryData = null;
 
-// KASUS 1: Gambar tersimpan sebagai Base64 Data URL (data:image/...)
+// Ekstrak data biner dari berbagai format penyimpanan gambar:
 if (preg_match('/^data:(image\/[a-zA-Z0-9.-]+);base64,(.+)$/s', $rawImage, $matches)) {
-    $mimeType = strtolower($matches[1]);
+    // Kasus Base64 Data URL
     $binaryData = base64_decode($matches[2]);
+} elseif (strpos($rawImage, 'http') === 0) {
+    // Kasus URL eksternal
+    $context = stream_context_create(['http' => ['timeout' => 5]]);
+    $binaryData = @file_get_contents($rawImage, false, $context);
+} else {
+    // Kasus path lokal relatif
+    $localPath = __DIR__ . '/../' . ltrim($rawImage, '/');
+    if (file_exists($localPath) && is_file($localPath)) {
+        $binaryData = @file_get_contents($localPath);
+    }
+}
 
-    if ($binaryData !== false && strlen($binaryData) > 0) {
-        // Tentukan ekstensi cache
-        $ext = (strpos($mimeType, 'png') !== false) ? 'png' : 'jpg';
-        $finalCacheFile = $cacheDir . $cleanId . '.' . $ext;
+if (!$binaryData) {
+    serveDefaultImage();
+    exit;
+}
+
+// 3. Buat banner landscape 1200 x 630 px menggunakan GD (standar WhatsApp Large Card)
+if (function_exists('imagecreatefromstring') && function_exists('imagecreatetruecolor')) {
+    $srcImg = @imagecreatefromstring($binaryData);
+    if ($srcImg) {
+        $origW = imagesx($srcImg);
+        $origH = imagesy($srcImg);
+
+        $targetW = 1200;
+        $targetH = 630;
+        $targetRatio = $targetW / $targetH; // 1.9047
+        $srcRatio = $origW / $origH;
+
+        if ($srcRatio > $targetRatio) {
+            // Gambar sumber lebih lebar: potong sisi kanan dan kiri
+            $cropH = $origH;
+            $cropW = (int)($origH * $targetRatio);
+            $cropX = (int)(($origW - $cropW) / 2);
+            $cropY = 0;
+        } else {
+            // Gambar sumber lebih tinggi (kotak/portrait): potong atas dan bawah secara terukur
+            $cropW = $origW;
+            $cropH = (int)($origW / $targetRatio);
+            $cropX = 0;
+            // Fokus sedikit ke area tengah-atas agar wajah/objek utama tidak terpotong
+            $cropY = (int)(($origH - $cropH) * 0.35);
+            if ($cropY < 0) $cropY = 0;
+        }
+
+        $canvas = imagecreatetruecolor($targetW, $targetH);
+        
+        // Background putih jika sumber memiliki transparansi
+        $white = imagecolorallocate($canvas, 255, 255, 255);
+        imagefilledrectangle($canvas, 0, 0, $targetW, $targetH, $white);
+
+        imagecopyresampled($canvas, $srcImg, 0, 0, $cropX, $cropY, $targetW, $targetH, $cropW, $cropH);
+        imagedestroy($srcImg);
 
         if (!is_dir($cacheDir)) {
             @mkdir($cacheDir, 0755, true);
         }
-        @file_put_contents($finalCacheFile, $binaryData);
 
-        header('Content-Type: ' . $mimeType);
-        header('Content-Length: ' . strlen($binaryData));
-        header('Cache-Control: public, max-age=604800'); // Cache 7 hari
-        echo $binaryData;
+        // Kompresi kualitas 82 menghasilkan file ~80-160 KB (aman di bawah batas 300 KB WhatsApp)
+        imagejpeg($canvas, $bannerFile, 82);
+        imagedestroy($canvas);
+
+        serveFile($bannerFile, 'image/jpeg');
         exit;
     }
 }
 
-// KASUS 2: Gambar berupa path relatif (misal: uploads/sako_... atau assets/images/...)
-$localPath = __DIR__ . '/../' . ltrim($rawImage, '/');
-if (file_exists($localPath) && is_file($localPath)) {
-    $ext = strtolower(pathinfo($localPath, PATHINFO_EXTENSION));
-    $mime = ($ext === 'png') ? 'image/png' : (($ext === 'webp') ? 'image/webp' : 'image/jpeg');
-    serveFile($localPath, $mime);
-    exit;
+// 4. Fallback jika GD tidak tersedia: simpan dan sajikan data biner asli
+if (!is_dir($cacheDir)) {
+    @mkdir($cacheDir, 0755, true);
 }
-
-// KASUS 3: Gambar berupa URL eksternal (http...)
-if (strpos($rawImage, 'http') === 0) {
-    header('Location: ' . $rawImage, true, 302);
-    exit;
-}
-
-serveDefaultImage();
+@file_put_contents($bannerFile, $binaryData);
+serveFile($bannerFile, 'image/jpeg');
 exit;
 
 function serveFile($path, $mime) {
     header('Content-Type: ' . $mime);
     header('Content-Length: ' . filesize($path));
-    header('Cache-Control: public, max-age=604800');
+    header('Cache-Control: public, max-age=604800'); // Cache 7 hari
     readfile($path);
 }
 

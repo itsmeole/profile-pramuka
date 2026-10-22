@@ -1,7 +1,8 @@
 <?php
 /**
  * Server-Side Open Graph & Meta Handler untuk Berita SAKO Ma'arif NU Jabar
- * Memastikan gambar, judul, dan ringkasan berita tampil sempurna saat dibagikan ke WhatsApp, FB, Telegram, dll.
+ * Memastikan gambar, judul, dan ringkasan berita tampil besar (Large Image Card)
+ * saat dibagikan ke WhatsApp, Instagram Story, Facebook, Telegram, dll.
  */
 
 $reqId = isset($_GET['id']) ? trim($_GET['id']) : '';
@@ -36,22 +37,24 @@ $rawDesc = $article && !empty($article['excerpt'])
     : ($article && !empty($article['content']) ? substr(strip_tags($article['content']), 0, 160) : "Kursus Mahir Dasar (KMD) Pramuka Sako Pandu Maarif NU Jawa Barat. Tingkatkan Kompetensi, Bangun Karakter, Siapkan Pembina Hebat!");
 $desc = htmlspecialchars($rawDesc);
 
+// Default fallback gambar banner
 $image = $baseUrl . "/assets/images/kemah2.png";
 $imageType = "image/png";
 
 if ($article && !empty($article['image'])) {
-    $rawImg = $article['image'];
-    if (strpos($rawImg, 'data:image/') === 0) {
-        // Gambar tersimpan sebagai Base64 di database:
-        // Arahkan ke endpoint biner api/image.php agar WhatsApp crawler dapat membacanya sebagai gambar asli
-        $cleanId = preg_replace('/[^a-zA-Z0-9_-]/', '', $reqId);
+    $cleanId = preg_replace('/[^a-zA-Z0-9_-]/', '', $reqId);
+    if ($cleanId) {
+        // Selalu gunakan endpoint banner api/image.php agar gambar di-crop & di-compress
+        // ke resolusi standar 1200x630 JPEG (< 250 KB) untuk memicu Large Preview Card di WhatsApp
         $image = $baseUrl . "/api/image.php?id=" . urlencode($cleanId);
-        $imageType = (strpos($rawImg, 'image/png') !== false) ? "image/png" : "image/jpeg";
-    } elseif (strpos($rawImg, 'http') === 0) {
-        $image = $rawImg;
-        $imageType = (strpos($rawImg, '.png') !== false) ? "image/png" : "image/jpeg";
+        $imageType = "image/jpeg";
     } else {
-        $image = $baseUrl . '/' . ltrim($rawImg, '/');
+        $rawImg = $article['image'];
+        if (strpos($rawImg, 'http') === 0) {
+            $image = $rawImg;
+        } else {
+            $image = $baseUrl . '/' . ltrim($rawImg, '/');
+        }
         $imageType = (strpos($rawImg, '.png') !== false) ? "image/png" : "image/jpeg";
     }
 }
@@ -79,9 +82,13 @@ $html = preg_replace('/<meta\s+property=["\']og:title["\']\s+content=["\'].*?["\
 $html = preg_replace('/<meta\s+property=["\']og:description["\']\s+content=["\'].*?["\']\s*\/?>/is', "<meta property=\"og:description\" content=\"{$desc}\" />", $html);
 $html = preg_replace('/<meta\s+property=["\']og:image["\']\s+content=["\'].*?["\']\s*\/?>/is', "<meta property=\"og:image\" content=\"{$image}\" />", $html);
 $html = preg_replace('/<meta\s+property=["\']og:image:secure_url["\']\s+content=["\'].*?["\']\s*\/?>/is', "<meta property=\"og:image:secure_url\" content=\"{$image}\" />", $html);
+$html = preg_replace('/<meta\s+property=["\']og:image:type["\']\s+content=["\'].*?["\']\s*\/?>/is', "<meta property=\"og:image:type\" content=\"{$imageType}\" />", $html);
+$html = preg_replace('/<meta\s+property=["\']og:image:width["\']\s+content=["\'].*?["\']\s*\/?>/is', "<meta property=\"og:image:width\" content=\"1200\" />", $html);
+$html = preg_replace('/<meta\s+property=["\']og:image:height["\']\s+content=["\'].*?["\']\s*\/?>/is', "<meta property=\"og:image:height\" content=\"630\" />", $html);
 $html = preg_replace('/<meta\s+property=["\']og:url["\']\s+content=["\'].*?["\']\s*\/?>/is', "<meta property=\"og:url\" content=\"{$pageUrl}\" />", $html);
 
 // Ganti Twitter Cards
+$html = preg_replace('/<meta\s+name=["\']twitter:card["\']\s+content=["\'].*?["\']\s*\/?>/is', "<meta name=\"twitter:card\" content=\"summary_large_image\" />", $html);
 $html = preg_replace('/<meta\s+name=["\']twitter:title["\']\s+content=["\'].*?["\']\s*\/?>/is', "<meta name=\"twitter:title\" content=\"{$title}\" />", $html);
 $html = preg_replace('/<meta\s+name=["\']twitter:description["\']\s+content=["\'].*?["\']\s*\/?>/is', "<meta name=\"twitter:description\" content=\"{$desc}\" />", $html);
 $html = preg_replace('/<meta\s+name=["\']twitter:image["\']\s+content=["\'].*?["\']\s*\/?>/is', "<meta name=\"twitter:image\" content=\"{$image}\" />", $html);
