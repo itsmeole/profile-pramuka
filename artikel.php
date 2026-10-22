@@ -37,11 +37,22 @@ $rawDesc = $article && !empty($article['excerpt'])
 $desc = htmlspecialchars($rawDesc);
 
 $image = $baseUrl . "/assets/images/kemah2.png";
+$imageType = "image/png";
+
 if ($article && !empty($article['image'])) {
-    if (strpos($article['image'], 'http') === 0) {
-        $image = $article['image'];
+    $rawImg = $article['image'];
+    if (strpos($rawImg, 'data:image/') === 0) {
+        // Gambar tersimpan sebagai Base64 di database:
+        // Arahkan ke endpoint biner api/image.php agar WhatsApp crawler dapat membacanya sebagai gambar asli
+        $cleanId = preg_replace('/[^a-zA-Z0-9_-]/', '', $reqId);
+        $image = $baseUrl . "/api/image.php?id=" . urlencode($cleanId);
+        $imageType = (strpos($rawImg, 'image/png') !== false) ? "image/png" : "image/jpeg";
+    } elseif (strpos($rawImg, 'http') === 0) {
+        $image = $rawImg;
+        $imageType = (strpos($rawImg, '.png') !== false) ? "image/png" : "image/jpeg";
     } else {
-        $image = $baseUrl . '/' . ltrim($article['image'], '/');
+        $image = $baseUrl . '/' . ltrim($rawImg, '/');
+        $imageType = (strpos($rawImg, '.png') !== false) ? "image/png" : "image/jpeg";
     }
 }
 

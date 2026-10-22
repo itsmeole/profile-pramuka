@@ -638,6 +638,14 @@ async function runTests() {
   assert(artikelPhpExists,
     'Open Graph: File artikel.php tersedia untuk menangani Open Graph dinamis saat dibagikan ke WhatsApp');
 
+  const apiImagePhpExists = fs.existsSync(path.join(ROOT_DIR, 'api', 'image.php'));
+  assert(apiImagePhpExists,
+    'Open Graph: File api/image.php tersedia untuk menyajikan gambar biner / Base64 decoder ke bot WhatsApp');
+
+  const artikelPhpContent = fs.readFileSync(path.join(ROOT_DIR, 'artikel.php'), 'utf8');
+  assert(artikelPhpContent.includes('api/image.php'),
+    'Open Graph: artikel.php mengarahkan gambar Base64 ke api/image.php endpoint biner');
+
   // --------------------------------------------------------------------------
   // SUMMARY
   // --------------------------------------------------------------------------

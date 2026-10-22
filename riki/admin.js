@@ -337,8 +337,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // File Upload & Preview Handler with strict <= 2MB Check
+  // File Upload & Preview Handler with automatic hosting upload
   if (newsImageFileInput) {
-    newsImageFileInput.addEventListener('change', (e) => {
+    newsImageFileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
@@ -352,19 +353,45 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const sizeKb = Math.round(file.size / 1024);
       if (fileSizeIndicator) {
-        fileSizeIndicator.textContent = `Foto siap diunggah: ${sizeKb} KB (Valid < 2 MB)`;
+        fileSizeIndicator.textContent = `Memproses foto: ${sizeKb} KB...`;
         fileSizeIndicator.style.display = 'inline-block';
       }
 
+      // 1. Tampilkan pratinjau instan di browser
       const reader = new FileReader();
       reader.onload = (event) => {
         const base64Data = event.target.result;
-        newsImageInput.value = base64Data;
         imagePreviewEl.src = base64Data;
         imagePreviewBox.style.display = 'block';
         if (resetImageBtn) resetImageBtn.style.display = 'inline-block';
       };
       reader.readAsDataURL(file);
+
+      // 2. Unggah langsung ke server hosting (folder uploads/) agar menghasilkan URL file gambar asli untuk preview sosial media
+      try {
+        if (window.SakoDB && typeof window.SakoDB.uploadImage === 'function') {
+          const uploadedUrl = await window.SakoDB.uploadImage(file);
+          if (uploadedUrl && typeof uploadedUrl === 'string') {
+            newsImageInput.value = uploadedUrl;
+            if (fileSizeIndicator) {
+              fileSizeIndicator.textContent = `Foto siap diunggah: ${sizeKb} KB (Tersimpan di server)`;
+            }
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Upload image API error, fallback to data URL:', err);
+      }
+
+      // 3. Fallback: simpan sebagai base64 jika endpoint server tidak tersedia
+      reader.onloadend = () => {
+        if (!newsImageInput.value || newsImageInput.value.includes('assets/images')) {
+          newsImageInput.value = reader.result;
+        }
+        if (fileSizeIndicator) {
+          fileSizeIndicator.textContent = `Foto siap diunggah: ${sizeKb} KB (Valid < 2 MB)`;
+        }
+      };
     });
   }
 
