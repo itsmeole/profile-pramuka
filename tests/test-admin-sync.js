@@ -612,6 +612,33 @@ async function runTests() {
     'Favicon: riki/index.html memasang logo.png sebagai favicon tab browser');
 
   // --------------------------------------------------------------------------
+  // TEST SUITE 10: OPEN GRAPH & SOCIAL MEDIA SHARING (WHATSAPP PREVIEW)
+  // --------------------------------------------------------------------------
+  console.log('\n--- TEST SUITE 10: OPEN GRAPH & SOCIAL MEDIA SHARING ---');
+
+  const rawKmdHtml = fs.readFileSync(path.join(ROOT_DIR, 'artikel-kmd.html'), 'utf8');
+  assert(rawKmdHtml.includes('property="og:image"') && rawKmdHtml.includes('kemah2.png'),
+    'Open Graph: artikel-kmd.html memiliki meta og:image foto berita kemah2.png untuk preview WhatsApp');
+  assert(rawKmdHtml.includes('name="twitter:card" content="summary_large_image"'),
+    'Open Graph: artikel-kmd.html mendukung Twitter/X large image preview');
+
+  const rawKemahHtml = fs.readFileSync(path.join(ROOT_DIR, 'artikel-kemah-santri.html'), 'utf8');
+  assert(rawKemahHtml.includes('property="og:image"') && rawKemahHtml.includes('kemah1.png'),
+    'Open Graph: artikel-kemah-santri.html memiliki meta og:image foto berita kemah1.png untuk preview WhatsApp');
+
+  const rawIndexOg = fs.readFileSync(path.join(ROOT_DIR, 'index.html'), 'utf8');
+  assert(rawIndexOg.includes('property="og:image"') && rawIndexOg.includes('Banner.png'),
+    'Open Graph: index.html memiliki meta og:image banner');
+
+  const rawHtaccess = fs.readFileSync(path.join(ROOT_DIR, '.htaccess'), 'utf8');
+  assert(rawHtaccess.includes('artikel.php'),
+    'Open Graph: .htaccess memiliki routing dinamis ke artikel.php untuk artikel dengan query id');
+
+  const artikelPhpExists = fs.existsSync(path.join(ROOT_DIR, 'artikel.php'));
+  assert(artikelPhpExists,
+    'Open Graph: File artikel.php tersedia untuk menangani Open Graph dinamis saat dibagikan ke WhatsApp');
+
+  // --------------------------------------------------------------------------
   // SUMMARY
   // --------------------------------------------------------------------------
   console.log('\n================================================================');

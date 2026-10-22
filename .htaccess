@@ -12,6 +12,10 @@ DirectoryIndex index.html index.php
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
+# 2b. Handler Open Graph Meta untuk Berita Dinamis (WhatsApp / Facebook / Bot Crawler)
+RewriteCond %{QUERY_STRING} (^|&)id=([^&]+)
+RewriteRule ^artikel-kmd\.html$ artikel.php [L,QSA]
+
 # 3. Akses halaman tanpa akhiran .html (opsional & rapi)
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}\.html -f

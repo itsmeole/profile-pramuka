@@ -815,6 +815,33 @@
           if (reqId) {
             document.title = `${article.title} – SAKO Ma'arif NU Jawa Barat`;
           }
+
+          // Update dynamic Open Graph and Twitter Card tags in DOM
+          const setMetaTag = (propOrName, val, isProp) => {
+            if (!val) return;
+            const attr = isProp ? 'property' : 'name';
+            let el = document.querySelector(`meta[${attr}="${propOrName}"]`);
+            if (!el) {
+              el = document.createElement('meta');
+              el.setAttribute(attr, propOrName);
+              document.head.appendChild(el);
+            }
+            el.setAttribute('content', val);
+          };
+
+          const fullImgUrl = article.image
+            ? (article.image.startsWith('http') ? article.image : `${window.location.origin}/${article.image.replace(/^\//, '')}`)
+            : `${window.location.origin}/assets/images/kemah2.png`;
+          const articleExcerpt = article.excerpt || article.title;
+
+          setMetaTag('og:title', `${article.title} | SAKO Ma'arif NU Jawa Barat`, true);
+          setMetaTag('og:description', articleExcerpt, true);
+          setMetaTag('og:image', fullImgUrl, true);
+          setMetaTag('og:image:secure_url', fullImgUrl, true);
+          setMetaTag('og:url', window.location.href, true);
+          setMetaTag('twitter:title', `${article.title} | SAKO Ma'arif NU Jawa Barat`, false);
+          setMetaTag('twitter:description', articleExcerpt, false);
+          setMetaTag('twitter:image', fullImgUrl, false);
           const heroTitle = document.getElementById('articleHeroTitle');
           const heroSub = document.getElementById('articleHeroSub');
           const breadcrumbCurrent = document.getElementById('articleBreadcrumbCurrent');
