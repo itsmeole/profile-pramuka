@@ -341,6 +341,10 @@ async function runTests() {
     'Beranda: Menggunakan animasi loading skeleton pada daftar berita bawaan');
   assert(!initialIndexContent.includes('Kemah Santri Pramuka Terpadu Sako Maarif NU Jawa Barat Tahun 2026...'),
     'Beranda: Teks berita lama bawaan web berhasil dihapus');
+  assert(initialIndexContent.includes('gallery-preview-skeleton'),
+    'Beranda: Menggunakan animasi loading skeleton pada cuplikan galeri bawaan');
+  assert(!initialIndexContent.includes('alt="Dokumentasi kegiatan 1"'),
+    'Beranda: Foto lama bawaan pada cuplikan galeri berhasil dihapus diganti skeleton');
 
   const initialBeritaContent = fs.readFileSync(path.join(ROOT_DIR, 'berita.html'), 'utf8');
   assert(initialBeritaContent.includes('news-card-skeleton'),

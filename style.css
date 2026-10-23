@@ -1397,6 +1397,18 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   height: 220px;
 }
 
+.gallery-preview-item.gallery-preview-skeleton {
+  pointer-events: none;
+  cursor: default;
+  border: 1px solid var(--border);
+}
+
+.gallery-preview-item.gallery-preview-skeleton .skeleton-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
 .gallery-preview-item img {
   width: 100%;
   height: 100%;

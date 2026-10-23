@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=2.3" />
 
   <!-- Prevent flash of wrong theme -->
   <script>
@@ -284,22 +284,19 @@
         <h2 class="section-title">Dokumentasi Kegiatan</h2>
       </div>
       <div class="gallery-preview-grid" id="gallery-preview-grid">
-        <a href="galeri.html" class="gallery-preview-item item-1">
-          <img src="assets/images/kemah1.png" alt="Dokumentasi kegiatan 1" loading="lazy" />
-          <div class="gallery-overlay">Lihat Galeri</div>
-        </a>
-        <a href="galeri.html" class="gallery-preview-item item-2">
-          <img src="assets/images/kemah2.png" alt="Dokumentasi kegiatan 2" loading="lazy" />
-          <div class="gallery-overlay">Lihat Galeri</div>
-        </a>
-        <a href="galeri.html" class="gallery-preview-item item-3">
-          <img src="assets/images/kemah3.png" alt="Dokumentasi kegiatan 3" loading="lazy" />
-          <div class="gallery-overlay">Lihat Galeri</div>
-        </a>
-        <a href="galeri.html" class="gallery-preview-item item-4">
-          <img src="assets/images/kemah4.png" alt="Dokumentasi kegiatan 4" loading="lazy" />
-          <div class="gallery-overlay">Lihat Galeri</div>
-        </a>
+        <!-- Skeleton Loading State (Aktif saat data gambar sedang dimuat) -->
+        <div class="gallery-preview-item gallery-preview-skeleton" aria-hidden="true">
+          <span class="skeleton skeleton-img"></span>
+        </div>
+        <div class="gallery-preview-item gallery-preview-skeleton" aria-hidden="true">
+          <span class="skeleton skeleton-img"></span>
+        </div>
+        <div class="gallery-preview-item gallery-preview-skeleton" aria-hidden="true">
+          <span class="skeleton skeleton-img"></span>
+        </div>
+        <div class="gallery-preview-item gallery-preview-skeleton" aria-hidden="true">
+          <span class="skeleton skeleton-img"></span>
+        </div>
       </div>
       <div class="news-cta">
         <a href="galeri.html" class="btn btn-ghost">Lihat Semua Foto &rarr;</a>
@@ -383,8 +380,8 @@
   </button>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/data-manager.js"></script>
-  <script src="main.js"></script>
+  <script src="assets/js/data-manager.js?v=2.3"></script>
+  <script src="main.js?v=2.3"></script>
 </body>
 
 </html>
