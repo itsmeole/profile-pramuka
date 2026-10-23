@@ -2981,6 +2981,7 @@ body.menu-open {
   flex-direction: column;
   align-items: center;
   gap: 14px;
+  width: 100%;
 }
 
 .pagination-info {
@@ -2994,13 +2995,14 @@ body.menu-open {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   background: var(--bg-raised);
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
+  max-width: 100%;
 }
 
 .page-btn {
@@ -3009,7 +3011,7 @@ body.menu-open {
   justify-content: center;
   min-width: 38px;
   height: 38px;
-  padding: 0 12px;
+  padding: 0 14px;
   border-radius: 999px;
   border: 1px solid transparent;
   background: transparent;
@@ -3020,6 +3022,7 @@ body.menu-open {
   cursor: pointer;
   transition: all var(--t-fast);
   user-select: none;
+  white-space: nowrap;
 }
 
 .page-btn:hover:not(:disabled):not(.active) {
@@ -3049,12 +3052,73 @@ body.menu-open {
   user-select: none;
 }
 
+.page-btn-arrow {
+  display: inline-block;
+  font-size: 15px;
+  line-height: 1;
+}
+
 @media (max-width: 600px) {
+  .news-pagination-wrapper {
+    margin-top: 24px;
+    gap: 10px;
+  }
+
+  .pagination-info {
+    font-size: 12px;
+  }
+
+  .pagination {
+    gap: 4px;
+    padding: 4px 6px;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .pagination::-webkit-scrollbar {
+    display: none;
+  }
+
   .page-btn {
-    min-width: 34px;
-    height: 34px;
-    padding: 0 10px;
-    font-size: 12.5px;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 6px;
+    font-size: 13px;
+  }
+
+  /* Pada mobile, sembunyikan teks "Sebelumnya"/"Selanjutnya" dan hanya tampilkan panah agar tetap compact & muat dalam satu baris */
+  .page-btn .page-btn-text {
+    display: none;
+  }
+
+  .page-btn.prev-btn,
+  .page-btn.next-btn {
+    min-width: 36px;
+    width: 36px;
+    padding: 0;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 380px) {
+  .pagination {
+    gap: 3px;
+    padding: 3px 5px;
+  }
+
+  .page-btn {
+    min-width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .page-btn.prev-btn,
+  .page-btn.next-btn {
+    min-width: 32px;
+    width: 32px;
+    font-size: 14px;
   }
 }
 

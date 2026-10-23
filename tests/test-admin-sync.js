@@ -733,12 +733,19 @@ async function runTests() {
       `Sidebar Widget: ${page} memiliki tombol text ke tab galeri (galeri.html)`);
   });
 
-  // Test 3: Skeleton CSS styles
+  // Test 3: Skeleton CSS styles & Mobile Pagination
   const cssContent = fs.readFileSync(path.join(ROOT_DIR, 'style.css'), 'utf8');
   assert(cssContent.includes('.article-skeleton-wrapper') && cssContent.includes('article-loading-state'),
     'Skeleton CSS: style.css memiliki rule animasi dan transisi skeleton article-loading-state');
   assert(cssContent.includes('.sidebar-more-link'),
     'Sidebar CSS: style.css memiliki styling tombol tautan .sidebar-more-link');
+  assert(cssContent.includes('.page-btn .page-btn-text') && cssContent.includes('flex-wrap: nowrap'),
+    'Pagination Mobile CSS: style.css memiliki rule mobile untuk mencegah tombol wrap dan menyembunyikan teks');
+
+  const prevBtnArrow = bWin.document.querySelector('#beritaPagination .page-btn.prev-btn .page-btn-arrow');
+  const prevBtnText = bWin.document.querySelector('#beritaPagination .page-btn.prev-btn .page-btn-text');
+  assert(prevBtnArrow && prevBtnText,
+    'Pagination Mobile Markup: Tombol navigasi memiliki elemen span terpisah untuk panah dan teks pendukung responsive');
 
   // Test 4: Hydration and Related News Sidebar in main.js
   const { window: artWin } = createDOMForPage('artikel-kmd.html?id=3', {

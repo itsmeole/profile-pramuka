@@ -764,7 +764,7 @@
               const prevBtn = document.createElement('button');
               prevBtn.type = 'button';
               prevBtn.className = 'page-btn prev-btn';
-              prevBtn.innerHTML = '&larr; Sebelumnya';
+              prevBtn.innerHTML = '<span class="page-btn-arrow">&larr;</span><span class="page-btn-text"> Sebelumnya</span>';
               prevBtn.disabled = currentPage === 1;
               prevBtn.setAttribute('aria-label', 'Halaman Sebelumnya');
               prevBtn.addEventListener('click', (e) => {
@@ -812,7 +812,7 @@
               const nextBtn = document.createElement('button');
               nextBtn.type = 'button';
               nextBtn.className = 'page-btn next-btn';
-              nextBtn.innerHTML = 'Selanjutnya &rarr;';
+              nextBtn.innerHTML = '<span class="page-btn-text">Selanjutnya </span><span class="page-btn-arrow">&rarr;</span>';
               nextBtn.disabled = currentPage === totalPages;
               nextBtn.setAttribute('aria-label', 'Halaman Selanjutnya');
               nextBtn.addEventListener('click', (e) => {
